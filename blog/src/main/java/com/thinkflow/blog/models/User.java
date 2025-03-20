@@ -3,6 +3,9 @@ package com.thinkflow.blog.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Document(collection = "users")
 public class User {
     @Id
@@ -16,6 +19,9 @@ public class User {
     private String phoneNumber;
     private String address;
     private String bio;
+
+    private List<String> followers = new ArrayList<>();
+    private List<String> following = new ArrayList<>();
 
     // Getters and setters
     public String getId() {
@@ -80,5 +86,21 @@ public class User {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public List<String> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(List<String> followers) {
+        this.followers = followers;
+    }
+
+    public List<String> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(List<String> following) {
+        this.following = following;
     }
 }

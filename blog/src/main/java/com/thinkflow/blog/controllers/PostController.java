@@ -2,6 +2,7 @@ package com.thinkflow.blog.controllers;
 
 import com.thinkflow.blog.models.*;
 import com.thinkflow.blog.repositories.*;
+import com.thinkflow.blog.services.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,9 @@ public class PostController {
 
     @Autowired
     private ReplyRepository replyRepository;
+
+    @Autowired
+    private PostService postService;
 
     // Create a new post
     @PostMapping
@@ -409,5 +414,21 @@ public class PostController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching comment like count");
         }
+    }
+
+    // Fetch posts from users the logged-in user is following
+    @GetMapping("/following")
+    public ResponseEntity<List<Post>> getFollowingPosts(Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        // Fetch the user using Google ID
+        User user = userRepository.findByGoogleId(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Fetch posts from followed users
+        List<Post> followingPosts = postService.getFollowingPosts(user.getId());
+        return ResponseEntity.ok(followingPosts);
     }
 }

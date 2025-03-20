@@ -10,6 +10,46 @@ const Profile = () => {
   const [posts, setPosts] = useState([]); // State to store user's posts
   const [loading, setLoading] = useState(true);
 
+  const [followersDetails, setFollowersDetails] = useState([]); // List of followers with details
+  const [followingDetails, setFollowingDetails] = useState([]); // List of following with details
+
+  // Check if the logged-in user is following the profile user
+  const isFollowing = loggedInUser?.following?.includes(user?.id);
+
+  const followUser = async (followeeId) => {
+    try {
+      await axios.post(
+        `http://localhost:8080/user/${loggedInUser.id}/follow/${followeeId}`,
+        {},
+        { withCredentials: true }
+      );
+      // Update local state
+      setLoggedInUser((prevUser) => ({
+        ...prevUser,
+        following: [...prevUser.following, followeeId],
+      }));
+    } catch (error) {
+      console.error("Failed to follow user:", error);
+    }
+  };
+
+  const unfollowUser = async (followeeId) => {
+    try {
+      await axios.post(
+        `http://localhost:8080/user/${loggedInUser.id}/unfollow/${followeeId}`,
+        {},
+        { withCredentials: true }
+      );
+      // Update local state
+      setLoggedInUser((prevUser) => ({
+        ...prevUser,
+        following: prevUser.following.filter((id) => id !== followeeId),
+      }));
+    } catch (error) {
+      console.error("Failed to unfollow user:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -38,6 +78,25 @@ const Profile = () => {
           { withCredentials: true }
         );
         setPosts(postsResponse.data); // Set the user's posts
+
+        // Fetch followers and following details
+        if (userResponse.data.followers.length > 0) {
+          const followersResponse = await axios.post(
+            "http://localhost:8080/user/details",
+            userResponse.data.followers,
+            { withCredentials: true }
+          );
+          setFollowersDetails(followersResponse.data);
+        }
+
+        if (userResponse.data.following.length > 0) {
+          const followingResponse = await axios.post(
+            "http://localhost:8080/user/details",
+            userResponse.data.following,
+            { withCredentials: true }
+          );
+          setFollowingDetails(followingResponse.data);
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -84,13 +143,51 @@ const Profile = () => {
                 className="w-24 h-24 rounded-full"
               />
               <div>
-                <h1 className="text-2xl font-bold">{user.name}</h1>
+                <h2 className="text-2xl font-bold">{user.name}</h2>
                 <p className="text-gray-600">{user.email}</p>
                 <p className="text-gray-600">{user.id}</p>
                 <p className="text-gray-600 mt-2">
                   {user.bio || "No bio available."}
                 </p>
               </div>
+
+              {/* Followers and Following Count */}
+              <div className="flex space-x-4 mt-4">
+                <div>
+                  <span className="font-bold">
+                    {user.followers?.length || 0}
+                  </span>
+                  <span className="text-gray-600 ml-1">Followers</span>
+                </div>
+                <div>
+                  <span className="font-bold">
+                    {user.following?.length || 0}
+                  </span>
+                  <span className="text-gray-600 ml-1">Following</span>
+                </div>
+              </div>
+
+              {/* Follow/Unfollow button */}
+              {!isOwnProfile && (
+                <>
+                  {isFollowing ? (
+                    <button
+                      onClick={() => unfollowUser(user.id)}
+                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Unfollow
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => followUser(user.id)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Follow
+                    </button>
+                  )}
+                </>
+              )}
+
               {/* Show AddBlogPost only if it's the logged-in user's profile */}
               {isOwnProfile && (
                 <Link
@@ -130,6 +227,99 @@ const Profile = () => {
             )}
           </div>
         )}
+
+        <section className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-4xl mx-auto px-4">
+            {/* User Profile Section */}
+            {user && (
+              <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+                <div className="flex items-center space-x-6">
+                  <img
+                    src={user.picture || "https://via.placeholder.com/150"}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full"
+                  />
+                  <div>
+                    <h2 className="text-2xl font-bold">{user.name}</h2>
+                    <p className="text-gray-600">{user.email}</p>
+                    <p className="text-gray-600">{user.id}</p>
+                    <p className="text-gray-600 mt-2">
+                      {user.bio || "No bio available."}
+                    </p>
+
+                    {/* Followers and Following Count */}
+                    <div className="flex space-x-4 mt-4">
+                      <div>
+                        <span className="font-bold">
+                          {user.followers?.length || 0}
+                        </span>
+                        <span className="text-gray-600 ml-1">Followers</span>
+                      </div>
+                      <div>
+                        <span className="font-bold">
+                          {user.following?.length || 0}
+                        </span>
+                        <span className="text-gray-600 ml-1">Following</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Followers List */}
+            <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+              <h3 className="text-xl font-bold mb-4">Followers</h3>
+              {followersDetails.length > 0 ? (
+                followersDetails.map((follower) => (
+                  <div
+                    key={follower.id}
+                    className="flex items-center space-x-4 mb-4"
+                  >
+                    <img
+                      src={follower.picture || "https://via.placeholder.com/40"}
+                      alt={follower.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <p className="font-medium">{follower.name}</p>
+                      <p className="text-sm text-gray-500">{follower.email}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-600">No followers yet.</p>
+              )}
+            </div>
+
+            {/* Following List */}
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Following</h3>
+              {followingDetails.length > 0 ? (
+                followingDetails.map((following) => (
+                  <div
+                    key={following.id}
+                    className="flex items-center space-x-4 mb-4"
+                  >
+                    <img
+                      src={
+                        following.picture || "https://via.placeholder.com/40"
+                      }
+                      alt={following.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <p className="font-medium">{following.name}</p>
+                      <p className="text-sm text-gray-500">{following.email}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-600">Not following anyone yet.</p>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* User's Blog Posts Section */}
         <div className="space-y-6">

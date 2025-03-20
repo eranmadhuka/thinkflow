@@ -36,17 +36,14 @@ const Header = () => {
       } transition-all duration-300 ease-in-out`}
     >
       <nav className="flex items-center justify-between px-4 md:px-8 py-4 mx-auto max-w-7xl">
-        {/* Logo */}
         <div className="flex lg:flex-1">
           <Link to="/" className="-m-1.5 p-1.5">
             <img className="h-8 w-auto" src={Logo} alt="Logo" />
           </Link>
         </div>
 
-        {/* Desktop Menu */}
         {user ? (
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Search Input */}
             <div className="relative">
               <input
                 type="text"
@@ -55,11 +52,8 @@ const Header = () => {
               />
               <FaSearch className="absolute right-3 top-2 text-gray-500 cursor-pointer" />
             </div>
-
-            {/* Notification Icon */}
             <IoMdNotificationsOutline className="text-2xl text-gray-700 cursor-pointer hover:text-emerald-600" />
 
-            {/* User Dropdown */}
             <div className="relative">
               <button
                 className="flex items-center space-x-2"
@@ -75,7 +69,6 @@ const Header = () => {
                 </span>
               </button>
 
-              {/* Dropdown Menu */}
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-lg">
                   <Link
@@ -123,7 +116,6 @@ const Header = () => {
           </div>
         )}
 
-        {/* Mobile Menu Button */}
         <button
           type="button"
           className="lg:hidden p-2.5 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -137,7 +129,6 @@ const Header = () => {
         </button>
       </nav>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-md">
           <div className="px-4 py-4 flex flex-col space-y-3">

@@ -1,158 +1,272 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import {
-  FaHeart,
-  FaRegHeart,
-  FaRegComment,
-  FaRegBookmark,
-  FaShareAlt,
-  FaRegImage,
-  FaPaperPlane,
-} from "react-icons/fa";
-import { BsThreeDots } from "react-icons/bs";
 import { AuthContext } from "../context/AuthContext";
+import PostCard from "../components/posts/PostCard";
 
 const Feed = () => {
-  const [posts, setPosts] = useState([]);
+  const [activeTab, setActiveTab] = useState("for-you");
+  const [posts, setPosts] = useState([]); // Initialize as an empty array
+  const [followingPosts, setFollowingPosts] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(true);
-  const [commentText, setCommentText] = useState("");
-  const [activeCommentPost, setActiveCommentPost] = useState(null);
-  const { user } = useContext(AuthContext); // Get user details from AuthContext
+  const [savedPosts, setSavedPosts] = useState([]); // Initialize as an empty array
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchFeedPosts = async () => {
+    const fetchPosts = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/posts/feed", {
-          withCredentials: true,
-        });
-        setPosts(response.data);
-        console.log(response.data);
+        setLoading(true);
+
+        // Fetch all posts for "For You" tab
+        const allPostsResponse = await axios.get(
+          "http://localhost:8080/posts/feed",
+          {
+            withCredentials: true,
+          }
+        );
+        setPosts(
+          Array.isArray(allPostsResponse.data) ? allPostsResponse.data : []
+        );
+
+        // Fetch following posts
+        const followingPostsResponse = await axios.get(
+          "http://localhost:8080/posts/following",
+          {
+            withCredentials: true,
+          }
+        );
+        setFollowingPosts(
+          Array.isArray(followingPostsResponse.data)
+            ? followingPostsResponse.data
+            : []
+        );
+
+        // Fetch saved posts
+        const savedPostsResponse = await axios.get(
+          "http://localhost:8080/posts/saved",
+          {
+            withCredentials: true,
+          }
+        );
+        setSavedPosts(
+          Array.isArray(savedPostsResponse.data) ? savedPostsResponse.data : []
+        );
       } catch (error) {
-        console.error("Failed to fetch feed posts:", error);
+        console.error("Failed to fetch posts:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeedPosts();
+    fetchPosts();
   }, []);
+
+  const recommendedTopics = [
+    { name: "Programming", slug: "programming" },
+    { name: "Self Improvement", slug: "self-improvement" },
+    { name: "Data Science", slug: "data-science" },
+    { name: "Writing", slug: "writing" },
+    { name: "Technology", slug: "technology" },
+    { name: "Relationships", slug: "relationships" },
+    { name: "Politics", slug: "politics" },
+  ];
+
+  const whoToFollow = [
+    {
+      id: 1,
+      name: "Michelle Wiles",
+      bio: "Breaking down brands and strategy. CEO of Embedded",
+      picture: "https://via.placeholder.com/40",
+      verified: true,
+    },
+    {
+      id: 2,
+      name: "Netflix TechBlog",
+      bio: "Publication",
+      picture: "https://via.placeholder.com/40",
+      description: "Learn about Netflix's world class engineering efforts",
+    },
+    {
+      id: 3,
+      name: "John DeVore",
+      bio: "My memoir 'Theatre Kids: A True Tale of Off-Off Broadway'",
+      picture: "https://via.placeholder.com/40",
+      verified: true,
+    },
+  ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left Column - Feed */}
-      <div className="w-2/3 p-6">
-        <h1 className="text-2xl font-bold mb-6">Feed</h1>
-        {posts.length > 0 ? (
-          <div className="space-y-6">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-white rounded-xl shadow-sm overflow-hidden p-4"
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Left Column - Feed */}
+          <div className="md:w-2/3">
+            {/* Navigation Tabs */}
+            <div className="border-b flex mb-4">
+              <button
+                className={`px-4 py-2 mr-4 font-medium ${
+                  activeTab === "for-you"
+                    ? "border-b-2 border-black"
+                    : "text-gray-500"
+                }`}
+                onClick={() => setActiveTab("for-you")}
               >
-                <div className="flex items-center justify-between">
-                  <Link
-                    to={`/profile/${post.user?.id}`}
-                    className="flex items-center space-x-3"
-                  >
-                    <img
-                      src={
-                        post.user?.picture || "https://via.placeholder.com/40"
-                      }
-                      alt={post.user?.name || "User"}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                For you
+              </button>
+              <button
+                className={`px-4 py-2 font-medium ${
+                  activeTab === "following"
+                    ? "border-b-2 border-black"
+                    : "text-gray-500"
+                }`}
+                onClick={() => setActiveTab("following")}
+              >
+                Following
+              </button>
+            </div>
+
+            {/* Post Feed */}
+            <div className="space-y-1">
+              {activeTab === "for-you" ? (
+                posts.length > 0 ? (
+                  posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      savedPosts={savedPosts}
+                      setSavedPosts={setSavedPosts}
+                      posts={posts}
+                      setPosts={setPosts}
+                      followingPosts={followingPosts}
+                      setFollowingPosts={setFollowingPosts}
                     />
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {post.user?.name || "Unknown User"}
-                      </p>
+                  ))
+                ) : (
+                  <p className="text-gray-600 p-4">
+                    No posts available in your feed.
+                  </p>
+                )
+              ) : followingPosts.length > 0 ? (
+                followingPosts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    savedPosts={savedPosts}
+                    setSavedPosts={setSavedPosts}
+                    posts={posts}
+                    setPosts={setPosts}
+                    followingPosts={followingPosts}
+                    setFollowingPosts={setFollowingPosts}
+                  />
+                ))
+              ) : (
+                <div className="text-gray-600 p-4">
+                  <p>You don't follow anyone yet.</p>
+                  <p className="mt-2">
+                    Follow some authors to see their posts here!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="md:w-1/3">
+            {/* Recommended Topics */}
+            <div className="bg-white rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-bold mb-3">Recommended topics</h3>
+              <div className="flex flex-wrap gap-2">
+                {recommendedTopics.map((topic) => (
+                  <Link
+                    key={topic.slug}
+                    to={`/topics/${topic.slug}`}
+                    className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200"
+                  >
+                    {topic.name}
+                  </Link>
+                ))}
+              </div>
+              <Link to="/topics" className="text-sm text-gray-500 block mt-3">
+                See more topics
+              </Link>
+            </div>
+
+            {/* Who to Follow */}
+            <div className="bg-white rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-bold mb-3">Who to follow</h3>
+              <div className="space-y-4">
+                {whoToFollow.map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src={profile.picture}
+                        alt={profile.name}
+                        className="w-10 h-10 rounded-full mr-3"
+                      />
+                      <div>
+                        <div className="flex items-center">
+                          <span className="font-medium">{profile.name}</span>
+                          {profile.verified && (
+                            <span className="ml-1 text-blue-600">✓</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">{profile.bio}</p>
+                      </div>
+                    </div>
+                    <button className="text-sm px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100">
+                      Follow
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/recommendations"
+                className="text-sm text-gray-500 block mt-3"
+              >
+                See more suggestions
+              </Link>
+            </div>
+
+            {/* Recently Saved */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="text-lg font-bold mb-3">Recently saved</h3>
+              {savedPosts.length > 0 ? (
+                <div className="space-y-3">
+                  {savedPosts.slice(0, 3).map((post) => (
+                    <Link
+                      key={post.id}
+                      to={`/posts/${post.id}`}
+                      className="block"
+                    >
+                      <h4 className="font-medium hover:underline">
+                        {post.title}
+                      </h4>
                       <p className="text-xs text-gray-500">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </p>
-                    </div>
-                  </Link>
-                  <BsThreeDots
-                    size={20}
-                    className="text-gray-400 cursor-pointer"
-                  />
+                    </Link>
+                  ))}
                 </div>
-
-                <Link
-                  to={`/posts/${post.id}`}
-                  className="block mt-3 text-lg font-semibold"
-                >
-                  {post.title}
-                </Link>
-
-                {/* Display Thumbnail Image */}
-                {post.thumbnailUrl && (
-                  <img
-                    src={post.thumbnailUrl}
-                    alt="Thumbnail"
-                    className="rounded-lg w-full object-cover max-h-64"
-                  />
-                )}
-
-                <p className="text-gray-700 mb-3">{post.content}</p>
-
-                {/* Display Media Files (if any) */}
-                {/* {post.mediaUrls?.map((url, index) => (
-                  <div key={index} className="mt-3">
-                    {post.fileTypes[index] === "image" ? (
-                      <img
-                        src={url}
-                        alt={`Media ${index + 1}`}
-                        className="rounded-lg w-full object-cover max-h-64"
-                      />
-                    ) : (
-                      <video
-                        src={url}
-                        controls
-                        className="rounded-lg w-full object-cover max-h-64"
-                      />
-                    )}
-                  </div>
-                ))} */}
-
-                <div className="flex justify-between text-sm text-gray-500 mt-2">
-                  <p>{post.likes?.length || 0} Likes</p>
-                  <p>{post.comments?.length || 0} Comments</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-600">No posts available in your feed.</p>
-        )}
-      </div>
-
-      {/* Right Column - User Profile */}
-      <div className="w-1/3 bg-white p-6 border border-gray-200">
-        {user ? ( // Use the `user` object from AuthContext
-          <div className="text-center">
-            <img
-              src={user.picture || "https://via.placeholder.com/80"}
-              alt="Profile"
-              className="w-20 h-20 rounded-full mx-auto"
-            />
-            <h2 className="text-lg font-semibold mt-3">{user.name}</h2>
-            <p className="text-gray-500">{user.bio || "No bio available."}</p>
-            <div className="mt-3 flex justify-center space-x-6">
-              <p className="font-medium">{user.followers} Followers</p>
-              <p className="font-medium">{user.following} Following</p>
+              ) : (
+                <p className="text-gray-600 text-sm">No saved posts yet.</p>
+              )}
+              <Link to="/saved" className="text-sm text-gray-500 block mt-3">
+                See all (0)
+              </Link>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-600 text-center">Loading profile...</p>
-        )}
+        </div>
       </div>
     </div>
   );

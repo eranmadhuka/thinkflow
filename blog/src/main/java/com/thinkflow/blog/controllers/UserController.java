@@ -2,6 +2,7 @@ package com.thinkflow.blog.controllers;
 
 import com.thinkflow.blog.models.User;
 import com.thinkflow.blog.repositories.UserRepository;
+import com.thinkflow.blog.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -17,6 +19,9 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     // Get logged-in user's profile
     @GetMapping("/profile")
@@ -82,5 +87,28 @@ public class UserController {
 
         userRepository.save(user);
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/{followerId}/follow/{followeeId}")
+    public ResponseEntity<String> followUser(
+            @PathVariable String followerId,
+            @PathVariable String followeeId) {
+        userService.followUser(followerId, followeeId);
+        return ResponseEntity.ok("Followed successfully");
+    }
+
+    @PostMapping("/{followerId}/unfollow/{followeeId}")
+    public ResponseEntity<String> unfollowUser(
+            @PathVariable String followerId,
+            @PathVariable String followeeId) {
+        userService.unfollowUser(followerId, followeeId);
+        return ResponseEntity.ok("Unfollowed successfully");
+    }
+
+    // Fetch user details by IDs
+    @PostMapping("/details")
+    public ResponseEntity<List<User>> getUsersByIds(@RequestBody List<String> userIds) {
+        List<User> users = userService.getUsersByIds(userIds);
+        return ResponseEntity.ok(users);
     }
 }

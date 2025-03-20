@@ -16,9 +16,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
+        <div className="bg-gray-100 min-h-screen">
           <Header />
-          <main className="w-full mx-auto max-w-screen-xl px-4 md:px-8 py-6 mt-12">
+          <main className="w-full mx-auto max-w-screen-xl px-4 md:px-8 py-6 mt-16">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/feed" element={<Feed />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -7,7 +7,9 @@ import {
   FaRegComment,
   FaArrowLeft,
   FaPaperPlane,
+  FaTimes,
 } from "react-icons/fa";
+import { AuthContext } from "../../context/AuthContext";
 
 const PostDetail = () => {
   const { postId } = useParams();
@@ -16,18 +18,55 @@ const PostDetail = () => {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
+  const [likes, setLikes] = useState(0); // Like count
+  const [hasLiked, setHasLiked] = useState(false); // User's like status
+  const { user } = useContext(AuthContext);
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [likesList, setLikesList] = useState([]);
+  const [loadingLikes, setLoadingLikes] = useState(false);
 
   useEffect(() => {
     const fetchPostDetails = async () => {
       try {
-        const response = await axios.get(
+        // Fetch post details
+        const postResponse = await axios.get(
           `http://localhost:8080/posts/${postId}`,
           {
             withCredentials: true,
           }
         );
-        setPost(response.data);
-        setComments(response.data.comments || []);
+        setPost(postResponse.data);
+
+        // Fetch like count for the post
+        const likesResponse = await axios.get(
+          `http://localhost:8080/posts/${postId}/like-count`,
+          {
+            withCredentials: true,
+          }
+        );
+        setLikes(likesResponse.data);
+
+        // Fetch user's like status
+        if (user) {
+          const userLikeResponse = await axios.get(
+            `http://localhost:8080/posts/${postId}/has-liked`,
+            {
+              withCredentials: true,
+            }
+          );
+          setHasLiked(userLikeResponse.data);
+        }
+
+        // Fetch comments for the post
+        const commentsResponse = await axios.get(
+          `http://localhost:8080/posts/${postId}/comments`,
+          {
+            withCredentials: true,
+          }
+        );
+        setComments(
+          Array.isArray(commentsResponse.data) ? commentsResponse.data : []
+        );
       } catch (error) {
         console.error("Failed to fetch post details:", error);
       } finally {
@@ -36,13 +75,40 @@ const PostDetail = () => {
     };
 
     fetchPostDetails();
-  }, [postId]);
+  }, [postId, user]);
 
-  const handleLike = async () => {
+  const fetchLikesList = async () => {
     if (!post) return;
 
+    setLoadingLikes(true);
     try {
-      await axios.post(
+      const response = await axios.get(
+        `http://localhost:8080/posts/${post.id}/likes`,
+        {
+          withCredentials: true,
+        }
+      );
+      setLikesList(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Failed to fetch likes list:", error);
+    } finally {
+      setLoadingLikes(false);
+    }
+  };
+
+  const handleShowLikes = async () => {
+    // Only proceed if there are likes
+    if (likes > 0) {
+      await fetchLikesList();
+      setShowLikesModal(true);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!post || !user) return;
+
+    try {
+      const response = await axios.post(
         `http://localhost:8080/posts/${post.id}/like`,
         {},
         {
@@ -50,40 +116,12 @@ const PostDetail = () => {
         }
       );
 
-      // Update the post in the state
-      setPost({
-        ...post,
-        likes: post.isLikedByCurrentUser
-          ? (post.likes || []).filter((like) => like.userId !== "currentUserId")
-          : [...(post.likes || []), { userId: "currentUserId" }],
-        isLikedByCurrentUser: !post.isLikedByCurrentUser,
-      });
+      // Update the likes in the state
+      setLikes(response.data.likeCount); // Assuming the response contains the updated like count
+      setHasLiked(response.data.hasLiked); // Assuming the response contains the user's like status
     } catch (error) {
       console.error("Failed to like post:", error);
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!post?.user?.id) return;
-
-    try {
-      await axios.post(
-        `http://localhost:8080/users/${post.user.id}/follow`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      setPost({
-        ...post,
-        user: {
-          ...post.user,
-          isFollowed: !post.user.isFollowed,
-        },
-      });
-    } catch (error) {
-      console.error("Failed to follow user:", error);
+      alert("Failed to like post. Please try again.");
     }
   };
 
@@ -101,11 +139,17 @@ const PostDetail = () => {
         }
       );
 
+      // Update the comments in the state
       setComments([...comments, response.data]);
       setCommentText("");
     } catch (error) {
       console.error("Failed to add comment:", error);
+      alert("Failed to add comment. Please try again.");
     }
+  };
+
+  const handleFollow = () => {
+    // Implement follow functionality here
   };
 
   if (loading) {
@@ -191,47 +235,57 @@ const PostDetail = () => {
               <p className="text-lg leading-relaxed">{post.content}</p>
             </div>
 
-            {/* Post image (if available) */}
-            {post.image && (
-              <div className="mt-6 rounded-lg overflow-hidden">
-                <img
-                  src={post.image}
-                  alt="Post content"
-                  className="w-full object-cover"
-                />
+            {/* Display Media Files */}
+            {post.mediaUrls?.map((url, index) => (
+              <div key={index} className="mt-6 rounded-lg overflow-hidden">
+                {post.fileTypes[index] === "image" ? (
+                  <img
+                    src={url}
+                    alt={`Media ${index + 1}`}
+                    className="w-full object-cover"
+                  />
+                ) : (
+                  <video src={url} controls className="w-full object-cover" />
+                )}
               </div>
-            )}
+            ))}
+          </div>
 
-            {/* Post actions */}
-            <div className="mt-8 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleLike}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-md ${
-                      post.isLikedByCurrentUser
-                        ? "text-red-500"
-                        : "text-gray-600 hover:bg-gray-100"
+          {/* Post actions */}
+          <div className="mt-8 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-md ${
+                    hasLiked
+                      ? "text-red-500"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {hasLiked ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+                  <span
+                    className={`${
+                      likes > 0 ? "cursor-pointer hover:underline" : ""
                     }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShowLikes();
+                    }}
                   >
-                    {post.isLikedByCurrentUser ? (
-                      <FaHeart size={20} />
-                    ) : (
-                      <FaRegHeart size={20} />
-                    )}
-                    <span>{post.likes?.length || 0} Likes</span>
-                  </button>
+                    {likes} Likes
+                  </span>
+                </button>
 
-                  <button
-                    className="flex items-center space-x-2 px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100"
-                    onClick={() =>
-                      document.getElementById("comment-input").focus()
-                    }
-                  >
-                    <FaRegComment size={20} />
-                    <span>{comments.length || 0} Comments</span>
-                  </button>
-                </div>
+                <button
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100"
+                  onClick={() =>
+                    document.getElementById("comment-input").focus()
+                  }
+                >
+                  <FaRegComment size={20} />
+                  <span>{comments.length} Comments</span>
+                </button>
               </div>
             </div>
           </div>
@@ -243,7 +297,7 @@ const PostDetail = () => {
             {/* Comment input */}
             <div className="flex items-start space-x-3 mb-6">
               <img
-                src="https://via.placeholder.com/40"
+                src={user?.picture || "https://via.placeholder.com/40"}
                 alt="Your profile"
                 className="w-10 h-10 rounded-full"
               />
@@ -315,6 +369,68 @@ const PostDetail = () => {
           </div>
         </article>
       </div>
+
+      {/* Likes Modal */}
+      {showLikesModal && (
+        <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Likes</h3>
+              <button
+                onClick={() => setShowLikesModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {loadingLikes ? (
+                <div className="flex justify-center p-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : likesList.length > 0 ? (
+                <ul className="divide-y">
+                  {likesList.map((like) => (
+                    <li key={like._id} className="p-4 hover:bg-gray-50">
+                      <Link
+                        to={`/profile/${like.user._id}`}
+                        className="flex items-center space-x-3"
+                        onClick={() => setShowLikesModal(false)}
+                      >
+                        <img
+                          src={
+                            like.user.picture ||
+                            "https://via.placeholder.com/40"
+                          }
+                          alt={like.user.name || "User"}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                        />
+                        <div>
+                          <p className="font-medium">
+                            {like.user.name || "Unknown User"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(like.createdAt).toLocaleDateString()} at{" "}
+                            {new Date(like.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No likes yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

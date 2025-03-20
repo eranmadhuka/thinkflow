@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import AddBlogPost from "../../components/posts/AddBlogPost";
 import { Link } from "react-router-dom";
+import { FaRegImage } from "react-icons/fa";
 
 const Profile = () => {
   const [user, setUser] = useState(null); // User whose profile is being viewed
@@ -91,7 +92,15 @@ const Profile = () => {
                 </p>
               </div>
               {/* Show AddBlogPost only if it's the logged-in user's profile */}
-              {isOwnProfile && <AddBlogPost />}
+              {isOwnProfile && (
+                <Link
+                  to="/posts/add"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center"
+                >
+                  <FaRegImage className="mr-2" size={16} />
+                  Create Post
+                </Link>
+              )}
             </div>
             {/* Show Edit Profile and Logout buttons only if it's the logged-in user's profile */}
             {isOwnProfile && (

@@ -8,12 +8,19 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
-    // Fetch posts by userId (Google ID or other external ID)
+
+    /**
+     * Find all posts by a user's MongoDB ObjectId.
+     *
+     * @param userId The MongoDB ObjectId of the user.
+     * @return List of posts created by the user.
+     */
     List<Post> findByUserId(String userId);
 
-    // Fetch posts by User's MongoDB ObjectId using DBRef
-    List<Post> findByUser_Id(String userObjectId);
-
-    // Fetch all posts sorted by createdAt in descending order
+    /**
+     * Find all posts sorted by creation date in descending order.
+     *
+     * @return List of posts sorted by createdAt in descending order.
+     */
     List<Post> findAllByOrderByCreatedAtDesc();
 }

@@ -18,7 +18,7 @@ function App() {
       <Router>
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow container mx-auto px-4 md:px-8 py-6 mt-12">
+          <main className="w-full mx-auto max-w-screen-xl px-4 md:px-8 py-6 mt-12">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/feed" element={<Feed />} />

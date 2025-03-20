@@ -29,6 +29,12 @@ public class PostController {
     @Autowired
     private CommentRepository commentRepository;
 
+    @Autowired
+    private CommentLikeRepository commentLikeRepository;
+
+    @Autowired
+    private ReplyRepository replyRepository;
+
     // Create a new post
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Post post, @AuthenticationPrincipal OAuth2User principal) {
@@ -255,6 +261,153 @@ public class PostController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while checking like status");
+        }
+    }
+
+    // Like a comment
+    @PostMapping("/comments/{commentId}/like")
+    public ResponseEntity<?> likeComment(@PathVariable String commentId, @AuthenticationPrincipal OAuth2User principal) {
+        try {
+            String userId = principal.getAttribute("sub");
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+
+            // Fetch user details
+            User user = userRepository.findByGoogleId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Check if the user already liked the comment
+            Optional<CommentLike> existingLike = commentLikeRepository.findByCommentIdAndUserId(commentId, user.getId());
+
+            boolean isLiked;
+            if (existingLike.isPresent()) {
+                // Unlike the comment
+                commentLikeRepository.delete(existingLike.get());
+                isLiked = false;
+            } else {
+                // Like the comment
+                CommentLike like = new CommentLike();
+                like.setCommentId(commentId);
+                like.setUser(user);
+                like.setCreatedAt(new Date());
+                commentLikeRepository.save(like);
+                isLiked = true;
+            }
+
+            // Return updated like count and status
+            long likeCount = commentLikeRepository.countByCommentId(commentId);
+            return ResponseEntity.ok(new CommentLikeResponse(likeCount, isLiked));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the comment like");
+        }
+    }
+
+    // Response DTO for comment likes
+    class CommentLikeResponse {
+        private long likeCount;
+        private boolean liked;
+
+        public CommentLikeResponse(long likeCount, boolean liked) {
+            this.likeCount = likeCount;
+            this.liked = liked;
+        }
+
+        public long getLikeCount() {
+            return likeCount;
+        }
+
+        public boolean isLiked() {
+            return liked;
+        }
+    }
+
+    // Add a reply to a comment
+    @PostMapping("/comments/{commentId}/reply")
+    public ResponseEntity<?> addReply(
+            @PathVariable String commentId,
+            @RequestBody Reply reply,
+            @AuthenticationPrincipal OAuth2User principal
+    ) {
+        try {
+            String userId = principal.getAttribute("sub");
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+
+            // Fetch the user's details
+            User user = userRepository.findByGoogleId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Set reply details
+            reply.setCommentId(commentId);
+            reply.setUser(user);
+            reply.setCreatedAt(new Date());
+            replyRepository.save(reply);
+
+            return ResponseEntity.ok(reply);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the reply");
+        }
+    }
+
+    // Get all replies for a comment
+    @GetMapping("/comments/{commentId}/replies")
+    public ResponseEntity<?> getRepliesForComment(@PathVariable String commentId) {
+        try {
+            List<Reply> replies = replyRepository.findByCommentId(commentId);
+            return ResponseEntity.ok(replies);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching replies");
+        }
+    }
+
+    // Check if the current user has liked a comment
+    @GetMapping("/comments/{commentId}/has-liked")
+    public ResponseEntity<?> hasUserLikedComment(
+            @PathVariable String commentId,
+            @AuthenticationPrincipal OAuth2User principal
+    ) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            String userId = principal.getAttribute("sub");
+            if (userId == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            // Get the user's MongoDB ID
+            Optional<User> userOptional = userRepository.findByGoogleId(userId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.ok(false);
+            }
+
+            // Check if the user has liked the comment
+            Optional<CommentLike> like = commentLikeRepository.findByCommentIdAndUserId(commentId, userOptional.get().getId());
+            return ResponseEntity.ok(like.isPresent());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while checking comment like status");
+        }
+    }
+
+    // Get comment like count
+    @GetMapping("/comments/{commentId}/like-count")
+    public ResponseEntity<?> getCommentLikeCount(@PathVariable String commentId) {
+        try {
+            long likeCount = commentLikeRepository.countByCommentId(commentId);
+            return ResponseEntity.ok(likeCount);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching comment like count");
         }
     }
 }

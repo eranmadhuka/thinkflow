@@ -8,6 +8,7 @@ import {
   FaArrowLeft,
   FaPaperPlane,
   FaTimes,
+  FaReply,
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -18,12 +19,20 @@ const PostDetail = () => {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
-  const [likes, setLikes] = useState(0); // Like count
-  const [hasLiked, setHasLiked] = useState(false); // User's like status
+  const [likes, setLikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
   const { user } = useContext(AuthContext);
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [likesList, setLikesList] = useState([]);
   const [loadingLikes, setLoadingLikes] = useState(false);
+
+  // New state for comment likes and replies
+  const [commentLikes, setCommentLikes] = useState({});
+  const [hasLikedComment, setHasLikedComment] = useState({});
+  const [replyText, setReplyText] = useState({});
+  const [showReplyInput, setShowReplyInput] = useState({});
+  const [commentReplies, setCommentReplies] = useState({});
+  const [showReplies, setShowReplies] = useState({});
 
   useEffect(() => {
     const fetchPostDetails = async () => {
@@ -64,9 +73,16 @@ const PostDetail = () => {
             withCredentials: true,
           }
         );
-        setComments(
-          Array.isArray(commentsResponse.data) ? commentsResponse.data : []
-        );
+
+        const fetchedComments = Array.isArray(commentsResponse.data)
+          ? commentsResponse.data
+          : [];
+        setComments(fetchedComments);
+
+        // Initialize comment likes and replies
+        if (fetchedComments.length > 0) {
+          await fetchCommentLikesAndReplies(fetchedComments);
+        }
       } catch (error) {
         console.error("Failed to fetch post details:", error);
       } finally {
@@ -76,6 +92,56 @@ const PostDetail = () => {
 
     fetchPostDetails();
   }, [postId, user]);
+
+  const fetchCommentLikesAndReplies = async (fetchedComments) => {
+    const likesObj = {};
+    const hasLikedObj = {};
+    const repliesObj = {};
+
+    // Fetch like counts and like status for each comment
+    await Promise.all(
+      fetchedComments.map(async (comment) => {
+        try {
+          // Get like count
+          const likeCountResponse = await axios.get(
+            `http://localhost:8080/posts/comments/${comment.id}/like-count`,
+            { withCredentials: true }
+          );
+          likesObj[comment.id] = likeCountResponse.data;
+
+          // Get liked status
+          if (user) {
+            const hasLikedResponse = await axios.get(
+              `http://localhost:8080/posts/comments/${comment.id}/has-liked`,
+              { withCredentials: true }
+            );
+            hasLikedObj[comment.id] = hasLikedResponse.data;
+          }
+
+          // Initialize reply text state
+          setReplyText((prev) => ({ ...prev, [comment.id]: "" }));
+
+          // Get replies
+          const repliesResponse = await axios.get(
+            `http://localhost:8080/posts/comments/${comment.id}/replies`,
+            { withCredentials: true }
+          );
+          repliesObj[comment.id] = Array.isArray(repliesResponse.data)
+            ? repliesResponse.data
+            : [];
+        } catch (error) {
+          console.error(
+            `Error fetching data for comment ${comment.id}:`,
+            error
+          );
+        }
+      })
+    );
+
+    setCommentLikes(likesObj);
+    setHasLikedComment(hasLikedObj);
+    setCommentReplies(repliesObj);
+  };
 
   const fetchLikesList = async () => {
     if (!post) return;
@@ -117,8 +183,8 @@ const PostDetail = () => {
       );
 
       // Update the likes in the state
-      setLikes(response.data.likeCount); // Assuming the response contains the updated like count
-      setHasLiked(response.data.hasLiked); // Assuming the response contains the user's like status
+      setLikes(response.data.likeCount);
+      setHasLiked(response.data.liked);
     } catch (error) {
       console.error("Failed to like post:", error);
       alert("Failed to like post. Please try again.");
@@ -139,6 +205,12 @@ const PostDetail = () => {
         }
       );
 
+      // Initialize new comment's like count and reply state
+      setCommentLikes((prev) => ({ ...prev, [response.data.id]: 0 }));
+      setHasLikedComment((prev) => ({ ...prev, [response.data.id]: false }));
+      setReplyText((prev) => ({ ...prev, [response.data.id]: "" }));
+      setCommentReplies((prev) => ({ ...prev, [response.data.id]: [] }));
+
       // Update the comments in the state
       setComments([...comments, response.data]);
       setCommentText("");
@@ -146,6 +218,84 @@ const PostDetail = () => {
       console.error("Failed to add comment:", error);
       alert("Failed to add comment. Please try again.");
     }
+  };
+
+  // New function to handle comment likes
+  const handleCommentLike = async (commentId) => {
+    if (!user) return;
+
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/posts/comments/${commentId}/like`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Update the state
+      setCommentLikes((prev) => ({
+        ...prev,
+        [commentId]: response.data.likeCount,
+      }));
+
+      setHasLikedComment((prev) => ({
+        ...prev,
+        [commentId]: response.data.liked,
+      }));
+    } catch (error) {
+      console.error("Failed to like comment:", error);
+      alert("Failed to like comment. Please try again.");
+    }
+  };
+
+  // Function to toggle reply input
+  const toggleReplyInput = (commentId) => {
+    setShowReplyInput((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
+
+  // Function to add reply
+  const handleReply = async (commentId) => {
+    if (!replyText[commentId]?.trim() || !user) return;
+
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/posts/comments/${commentId}/reply`,
+        {
+          content: replyText[commentId],
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Update replies in state
+      setCommentReplies((prev) => ({
+        ...prev,
+        [commentId]: [...(prev[commentId] || []), response.data],
+      }));
+
+      // Clear reply text and hide input
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+      setShowReplyInput((prev) => ({ ...prev, [commentId]: false }));
+
+      // Show replies
+      setShowReplies((prev) => ({ ...prev, [commentId]: true }));
+    } catch (error) {
+      console.error("Failed to add reply:", error);
+      alert("Failed to add reply. Please try again.");
+    }
+  };
+
+  // Toggle show/hide replies
+  const toggleReplies = (commentId) => {
+    setShowReplies((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
   };
 
   const handleFollow = () => {
@@ -327,43 +477,174 @@ const PostDetail = () => {
             <div className="space-y-4">
               {comments.length > 0 ? (
                 comments.map((comment) => (
-                  <div key={comment.id} className="flex items-start space-x-3">
-                    <Link to={`/profile/${comment.user?.id}`}>
-                      <img
-                        src={
-                          comment.user?.picture ||
-                          "https://via.placeholder.com/40"
-                        }
-                        alt={comment.user?.name || "User"}
-                        className="w-10 h-10 rounded-full mt-1"
-                      />
-                    </Link>
-                    <div className="flex-1">
-                      <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
-                        <Link
-                          to={`/profile/${comment.user?.id}`}
-                          className="font-medium text-gray-900 hover:underline"
-                        >
-                          {comment.user?.name || "Unknown User"}
-                        </Link>
-                        <p className="text-gray-700 mt-1">{comment.content}</p>
-                      </div>
-                      <div className="flex items-center space-x-4 mt-1 pl-2 text-xs text-gray-500">
-                        <span>
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </span>
-                        <button className="hover:text-gray-700">Like</button>
-                        <button className="hover:text-gray-700">Reply</button>
+                  <div key={comment.id} className="flex-col">
+                    <div className="flex items-start space-x-3">
+                      <Link to={`/profile/${comment.user?.id}`}>
+                        <img
+                          src={
+                            comment.user?.picture ||
+                            "https://via.placeholder.com/40"
+                          }
+                          alt={comment.user?.name || "User"}
+                          className="w-10 h-10 rounded-full mt-1"
+                        />
+                      </Link>
+                      <div className="flex-1">
+                        <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
+                          <Link
+                            to={`/profile/${comment.user?.id}`}
+                            className="font-medium text-gray-900 hover:underline"
+                          >
+                            {comment.user?.name || "Unknown User"}
+                          </Link>
+                          <p className="text-gray-700 mt-1">
+                            {comment.content}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-1 pl-2 text-xs text-gray-500">
+                          <span>
+                            {new Date(comment.createdAt).toLocaleDateString()}
+                          </span>
+                          <button
+                            className={`hover:text-gray-700 flex items-center ${
+                              hasLikedComment[comment.id] ? "text-red-500" : ""
+                            }`}
+                            onClick={() => handleCommentLike(comment.id)}
+                          >
+                            {hasLikedComment[comment.id] ? (
+                              <FaHeart size={12} className="mr-1" />
+                            ) : (
+                              <FaRegHeart size={12} className="mr-1" />
+                            )}
+                            Like{" "}
+                            {commentLikes[comment.id] > 0 &&
+                              `(${commentLikes[comment.id]})`}
+                          </button>
+                          <button
+                            className="hover:text-gray-700 flex items-center"
+                            onClick={() => toggleReplyInput(comment.id)}
+                          >
+                            <FaReply size={12} className="mr-1" />
+                            Reply
+                          </button>
+                          {commentReplies[comment.id]?.length > 0 && (
+                            <button
+                              className="hover:text-gray-700 font-medium"
+                              onClick={() => toggleReplies(comment.id)}
+                            >
+                              {showReplies[comment.id]
+                                ? "Hide replies"
+                                : `View ${
+                                    commentReplies[comment.id].length
+                                  } replies`}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Reply input area */}
+                    {showReplyInput[comment.id] && (
+                      <div className="flex items-start space-x-3 mt-2 ml-12">
+                        <img
+                          src={
+                            user?.picture || "https://via.placeholder.com/30"
+                          }
+                          alt="Your profile"
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div className="flex-1 relative">
+                          <textarea
+                            value={replyText[comment.id] || ""}
+                            onChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a reply..."
+                            className="w-full border border-gray-200 rounded-lg py-2 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[60px] resize-none"
+                          />
+                          <button
+                            onClick={() => handleReply(comment.id)}
+                            disabled={!replyText[comment.id]?.trim()}
+                            className={`absolute right-2 bottom-2 p-1.5 rounded-full ${
+                              replyText[comment.id]?.trim()
+                                ? "text-blue-500 hover:bg-blue-50"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            <FaPaperPlane size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Replies list */}
+                    {showReplies[comment.id] &&
+                      commentReplies[comment.id]?.length > 0 && (
+                        <div className="ml-12 mt-2 space-y-3">
+                          {commentReplies[comment.id].map((reply) => (
+                            <div
+                              key={reply.id}
+                              className="flex items-start space-x-3"
+                            >
+                              <Link to={`/profile/${reply.user?.id}`}>
+                                <img
+                                  src={
+                                    reply.user?.picture ||
+                                    "https://via.placeholder.com/30"
+                                  }
+                                  alt={reply.user?.name || "User"}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              </Link>
+                              <div className="flex-1">
+                                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
+                                  <Link
+                                    to={`/profile/${reply.user?.id}`}
+                                    className="font-medium text-gray-900 hover:underline text-sm"
+                                  >
+                                    {" "}
+                                    {reply.user?.name || "Unknown User"}
+                                  </Link>
+                                  <p className="text-gray-700 mt-1 text-sm">
+                                    {reply.content}
+                                  </p>
+                                </div>
+                                <div className="flex items-center space-x-4 mt-1 pl-2 text-xs text-gray-500">
+                                  <span>
+                                    {new Date(
+                                      reply.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
+                                  <button
+                                    className={`hover:text-gray-700 flex items-center ${
+                                      hasLikedComment[reply.id]
+                                        ? "text-red-500"
+                                        : ""
+                                    }`}
+                                    onClick={() => handleCommentLike(reply.id)}
+                                  >
+                                    {hasLikedComment[reply.id] ? (
+                                      <FaHeart size={12} className="mr-1" />
+                                    ) : (
+                                      <FaRegHeart size={12} className="mr-1" />
+                                    )}
+                                    Like{" "}
+                                    {commentLikes[reply.id] > 0 &&
+                                      `(${commentLikes[reply.id]})`}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    No comments yet. Be the first to comment!
-                  </p>
-                </div>
+                <p className="text-gray-500 text-center">No comments yet.</p>
               )}
             </div>
           </div>
@@ -372,60 +653,49 @@ const PostDetail = () => {
 
       {/* Likes Modal */}
       {showLikesModal && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">Likes</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Likes</h2>
               <button
                 onClick={() => setShowLikesModal(false)}
                 className="p-2 rounded-full hover:bg-gray-100"
               >
-                <FaTimes />
+                <FaTimes size={20} />
               </button>
             </div>
-
-            <div className="max-h-96 overflow-y-auto">
+            <div className="space-y-4">
               {loadingLikes ? (
-                <div className="flex justify-center p-6">
+                <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
               ) : likesList.length > 0 ? (
-                <ul className="divide-y">
-                  {likesList.map((like) => (
-                    <li key={like._id} className="p-4 hover:bg-gray-50">
+                likesList.map((like) => (
+                  <div key={like.id} className="flex items-center space-x-3">
+                    <Link to={`/profile/${like.user?.id}`}>
+                      <img
+                        src={
+                          like.user?.picture || "https://via.placeholder.com/40"
+                        }
+                        alt={like.user?.name || "User"}
+                        className="w-10 h-10 rounded-full"
+                      />
+                    </Link>
+                    <div>
                       <Link
-                        to={`/profile/${like.user._id}`}
-                        className="flex items-center space-x-3"
-                        onClick={() => setShowLikesModal(false)}
+                        to={`/profile/${like.user?.id}`}
+                        className="font-medium text-gray-900 hover:underline"
                       >
-                        <img
-                          src={
-                            like.user.picture ||
-                            "https://via.placeholder.com/40"
-                          }
-                          alt={like.user.name || "User"}
-                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                        />
-                        <div>
-                          <p className="font-medium">
-                            {like.user.name || "Unknown User"}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(like.createdAt).toLocaleDateString()} at{" "}
-                            {new Date(like.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </div>
+                        {like.user?.name || "Unknown User"}
                       </Link>
-                    </li>
-                  ))}
-                </ul>
+                      <p className="text-sm text-gray-500">
+                        {like.user?.bio || ""}
+                      </p>
+                    </div>
+                  </div>
+                ))
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No likes yet.</p>
-                </div>
+                <p className="text-gray-500 text-center">No likes yet.</p>
               )}
             </div>
           </div>

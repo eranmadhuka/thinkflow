@@ -24,9 +24,13 @@ const Feed = () => {
             withCredentials: true,
           }
         );
-        setPosts(
-          Array.isArray(allPostsResponse.data) ? allPostsResponse.data : []
-        );
+
+        // Get posts with like and comment counts
+        const postsData = Array.isArray(allPostsResponse.data)
+          ? allPostsResponse.data
+          : [];
+        const postsWithCounts = await fetchPostsWithCounts(postsData);
+        setPosts(postsWithCounts);
 
         // Fetch following posts
         const followingPostsResponse = await axios.get(
@@ -35,11 +39,15 @@ const Feed = () => {
             withCredentials: true,
           }
         );
-        setFollowingPosts(
-          Array.isArray(followingPostsResponse.data)
-            ? followingPostsResponse.data
-            : []
+
+        // Get following posts with like and comment counts
+        const followingPostsData = Array.isArray(followingPostsResponse.data)
+          ? followingPostsResponse.data
+          : [];
+        const followingPostsWithCounts = await fetchPostsWithCounts(
+          followingPostsData
         );
+        setFollowingPosts(followingPostsWithCounts);
 
         // Fetch saved posts
         const savedPostsResponse = await axios.get(
@@ -48,9 +56,13 @@ const Feed = () => {
             withCredentials: true,
           }
         );
-        setSavedPosts(
-          Array.isArray(savedPostsResponse.data) ? savedPostsResponse.data : []
-        );
+
+        // Get saved posts with like and comment counts
+        const savedPostsData = Array.isArray(savedPostsResponse.data)
+          ? savedPostsResponse.data
+          : [];
+        const savedPostsWithCounts = await fetchPostsWithCounts(savedPostsData);
+        setSavedPosts(savedPostsWithCounts);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
       } finally {
@@ -60,6 +72,98 @@ const Feed = () => {
 
     fetchPosts();
   }, []);
+
+  // Helper function to fetch like and comment counts for posts
+  const fetchPostsWithCounts = async (postsArray) => {
+    try {
+      const postsWithCountsPromises = postsArray.map(async (post) => {
+        // Fetch like count
+        const likesResponse = await axios.get(
+          `http://localhost:8080/posts/${post.id}/like-count`,
+          {
+            withCredentials: true,
+          }
+        );
+
+        // Fetch comment count
+        const commentsResponse = await axios.get(
+          `http://localhost:8080/posts/${post.id}/comments`,
+          {
+            withCredentials: true,
+          }
+        );
+
+        // Check if user has liked the post
+        let hasLiked = false;
+        if (user) {
+          const userLikeResponse = await axios.get(
+            `http://localhost:8080/posts/${post.id}/has-liked`,
+            {
+              withCredentials: true,
+            }
+          );
+          hasLiked = userLikeResponse.data;
+        }
+
+        // Return post with additional data
+        return {
+          ...post,
+          likeCount: likesResponse.data,
+          commentCount: Array.isArray(commentsResponse.data)
+            ? commentsResponse.data.length
+            : 0,
+          hasLiked: hasLiked,
+        };
+      });
+
+      return await Promise.all(postsWithCountsPromises);
+    } catch (error) {
+      console.error("Error fetching post counts:", error);
+      return postsArray; // Return original posts if there's an error
+    }
+  };
+
+  // Function to handle liking a post
+  const handleLikePost = async (postId) => {
+    if (!user) {
+      // Redirect to login or show login modal
+      alert("Please log in to like posts");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `http://localhost:8080/posts/${postId}/like`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Update posts state to reflect the like
+      const updatePostsState = (postsArray) => {
+        return postsArray.map((post) => {
+          if (post.id === postId) {
+            const newLikeCount = post.hasLiked
+              ? post.likeCount - 1
+              : post.likeCount + 1;
+            return {
+              ...post,
+              likeCount: newLikeCount,
+              hasLiked: !post.hasLiked,
+            };
+          }
+          return post;
+        });
+      };
+
+      setPosts(updatePostsState(posts));
+      setFollowingPosts(updatePostsState(followingPosts));
+      setSavedPosts(updatePostsState(savedPosts));
+    } catch (error) {
+      console.error("Failed to like post:", error);
+    }
+  };
 
   const recommendedTopics = [
     { name: "Programming", slug: "programming" },
@@ -147,6 +251,8 @@ const Feed = () => {
                       setPosts={setPosts}
                       followingPosts={followingPosts}
                       setFollowingPosts={setFollowingPosts}
+                      handleLikePost={handleLikePost}
+                      user={user}
                     />
                   ))
                 ) : (
@@ -165,6 +271,8 @@ const Feed = () => {
                     setPosts={setPosts}
                     followingPosts={followingPosts}
                     setFollowingPosts={setFollowingPosts}
+                    handleLikePost={handleLikePost}
+                    user={user}
                   />
                 ))
               ) : (
@@ -262,7 +370,7 @@ const Feed = () => {
                 <p className="text-gray-600 text-sm">No saved posts yet.</p>
               )}
               <Link to="/saved" className="text-sm text-gray-500 block mt-3">
-                See all (0)
+                See all ({savedPosts.length})
               </Link>
             </div>
           </div>

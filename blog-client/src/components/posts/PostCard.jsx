@@ -1,167 +1,155 @@
-import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import { AuthContext } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 import {
-  FaHeart,
-  FaRegHeart,
   FaRegComment,
   FaRegBookmark,
   FaBookmark,
   FaShareAlt,
+  FaThumbsUp,
+  FaRegThumbsUp,
 } from "react-icons/fa";
 import { BsThreeDots } from "react-icons/bs";
-import { AuthContext } from "../../context/AuthContext";
 
-const PostCard = ({
-  post,
-  savedPosts,
-  setSavedPosts,
-  posts,
-  setPosts,
-  followingPosts,
-  setFollowingPosts,
-}) => {
+const PostCard = ({ post, posts, setPosts }) => {
   const { user } = useContext(AuthContext);
-  const isLiked = post.likes?.includes(user?.id);
-  const isSaved = savedPosts.some((savedPost) => savedPost.id === post.id);
+  const [likes, setLikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
 
-  const toggleSavePost = async (postId) => {
-    try {
-      await axios.post(
-        `http://localhost:8080/posts/${postId}/save`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+  useEffect(() => {
+    const fetchPostDetails = async () => {
+      try {
+        // Fetch like count
+        const likesResponse = await axios.get(
+          `http://localhost:8080/posts/${post.id}/like-count`,
+          { withCredentials: true }
+        );
+        setLikes(likesResponse.data);
 
-      // Update saved posts state
-      const isSaved = savedPosts.some((post) => post.id === postId);
-      if (isSaved) {
-        setSavedPosts(savedPosts.filter((post) => post.id !== postId));
-      } else {
-        const postToSave =
-          posts.find((post) => post.id === postId) ||
-          followingPosts.find((post) => post.id === postId);
-        if (postToSave) {
-          setSavedPosts([...savedPosts, postToSave]);
+        // Fetch user's like status
+        if (user) {
+          const userLikeResponse = await axios.get(
+            `http://localhost:8080/posts/${post.id}/has-liked`,
+            { withCredentials: true }
+          );
+          setHasLiked(userLikeResponse.data);
         }
+
+        // Fetch comment count
+        const commentsResponse = await axios.get(
+          `http://localhost:8080/posts/${post.id}/comments`,
+          { withCredentials: true }
+        );
+        setCommentCount(commentsResponse.data.length); // Get number of comments
+      } catch (error) {
+        console.error("Error fetching post details:", error);
       }
-    } catch (error) {
-      console.error("Failed to save/unsave post:", error);
-    }
-  };
+    };
 
-  const likePost = async (postId) => {
+    fetchPostDetails();
+  }, [post.id, user]);
+
+  const handleLike = async () => {
+    if (!user) return alert("You must be logged in to like posts.");
+
     try {
-      await axios.post(
-        `http://localhost:8080/posts/${postId}/like`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      // Update posts state
-      const updatePosts = (postsList) => {
-        return postsList.map((p) => {
-          if (p.id === postId) {
-            const isLiked = p.likes?.includes(user?.id);
-            return {
-              ...p,
-              likes: isLiked
-                ? p.likes.filter((id) => id !== user?.id)
-                : [...(p.likes || []), user?.id],
-            };
-          }
-          return p;
-        });
-      };
-
-      setPosts(updatePosts(posts));
-      setFollowingPosts(updatePosts(followingPosts));
+      if (hasLiked) {
+        await axios.post(
+          `http://localhost:8080/posts/${post.id}/like`,
+          {},
+          { withCredentials: true }
+        );
+        setLikes((prev) => prev - 1);
+      } else {
+        await axios.post(
+          `http://localhost:8080/posts/${post.id}/like`,
+          {},
+          { withCredentials: true }
+        );
+        setLikes((prev) => prev + 1);
+      }
+      setHasLiked(!hasLiked);
     } catch (error) {
-      console.error("Failed to like/unlike post:", error);
+      console.error("Error liking post:", error);
     }
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4 mb-4">
-      <div className="flex items-start">
-        {/* Author info */}
-        <div className="flex-1">
-          <div className="flex items-center mb-2">
+    <div className="bg-white rounded-lg shadow-md mb-4 overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-center mb-3">
+          <Link to={`/profile/${post.user?.id}`} className="flex-shrink-0">
+            <img
+              src={post.user?.picture || "https://via.placeholder.com/40"}
+              alt={post.user?.name || "User"}
+              className="w-10 h-10 rounded-full mr-3"
+            />
+          </Link>
+          <div className="flex-1">
             <Link
               to={`/profile/${post.user?.id}`}
-              className="flex items-center justify-center"
+              className="font-medium text-gray-900 hover:underline"
             >
-              <img
-                src={post.user?.picture || "https://via.placeholder.com/40"}
-                alt={post.user?.name || "User"}
-                className="w-6 h-6 rounded-full mr-2"
-              />
-              <span className="text-sm font-medium">
-                {post.user?.name || "Unknown User"}
-              </span>
+              {post.user?.name || "Unknown User"}
             </Link>
-            <span className="mx-1 text-gray-500">·</span>
-            <span className="text-sm text-gray-500">
+            <span className="text-gray-500 mx-1">·</span>
+            <span className="text-gray-500 text-sm">
               {new Date(post.createdAt).toLocaleDateString()}
             </span>
           </div>
+          <button className="p-2 text-gray-500 hover:text-gray-700">
+            <BsThreeDots />
+          </button>
+        </div>
 
-          {/* Post content */}
-          <Link to={`/posts/${post.id}`} className="block mb-2">
-            <h2 className="text-xl font-bold mb-1">{post.title}</h2>
-            <p className="text-gray-700">{post.content.substring(0, 150)}...</p>
+        <Link to={`/posts/${post.id}`} className="block">
+          <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+          <p className="text-gray-700 mb-3">
+            {post.content.substring(0, 150)}...
+          </p>
+        </Link>
+
+        {post.mediaUrls?.length > 0 && (
+          <Link to={`/posts/${post.id}`} className="block mb-3">
+            <img
+              src={post.mediaUrls[0]}
+              alt="Post media"
+              className="w-full h-64 object-cover rounded-lg"
+            />
+          </Link>
+        )}
+
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+          {/* Like Button - Changed to thumbs up icon & color based on like status */}
+          <button
+            onClick={handleLike}
+            className={`flex items-center space-x-1 ${
+              hasLiked ? "text-blue-500" : "text-gray-500"
+            } hover:text-blue-600`}
+          >
+            {hasLiked ? <FaThumbsUp size={18} /> : <FaRegThumbsUp size={18} />}
+            <span>{likes}</span>
+          </button>
+
+          {/* Comment Count */}
+          <Link
+            to={`/posts/${post.id}`}
+            className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
+          >
+            <FaRegComment size={18} />
+            <span>{commentCount}</span>
           </Link>
 
-          {/* Post image */}
-          {post.thumbnailUrl && (
-            <div className="mb-3">
-              <img
-                src={post.thumbnailUrl}
-                alt="Post thumbnail"
-                className="rounded-md w-full h-48 object-cover"
-              />
-            </div>
-          )}
+          {/* Optional: Add bookmark and share buttons if needed */}
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
+            <FaRegBookmark size={18} />
+          </button>
 
-          {/* Post metrics */}
-          <div className="flex items-center justify-between text-gray-500 text-sm">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => likePost(post.id)}
-                className="flex items-center space-x-1"
-              >
-                {isLiked ? (
-                  <FaHeart className="text-red-500" />
-                ) : (
-                  <FaRegHeart />
-                )}
-                <span>{post.likes?.length || 0}</span>
-              </button>
-              <button className="flex items-center space-x-1">
-                <FaRegComment />
-                <span>{post.comments?.length || 0}</span>
-              </button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button onClick={() => toggleSavePost(post.id)} className="p-1">
-                {isSaved ? (
-                  <FaBookmark className="text-yellow-500" />
-                ) : (
-                  <FaRegBookmark />
-                )}
-              </button>
-              <button className="p-1">
-                <FaShareAlt />
-              </button>
-              <button className="p-1">
-                <BsThreeDots />
-              </button>
-            </div>
-          </div>
+          <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
+            <FaShareAlt size={18} />
+          </button>
         </div>
       </div>
     </div>

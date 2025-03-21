@@ -11,6 +11,7 @@ import PostDetail from "./components/posts/PostDetail";
 import { AuthProvider } from "./context/AuthContext";
 import UpdateProfile from "./pages/dashbaord/user/UpdateProfile";
 import AddBlogPost from "./components/posts/AddBlogPost";
+import SavedPosts from "./components/posts/SavedPosts";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/posts/add" element={<AddBlogPost />} />
               <Route path="/posts/:postId" element={<PostDetail />} />
               <Route path="/update-profile" element={<UpdateProfile />} />
+              <Route path="/saved-posts" element={<SavedPosts />} />
             </Routes>
           </main>
           <Footer />

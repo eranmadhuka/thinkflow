@@ -22,6 +22,7 @@ public class User {
 
     private List<String> followers = new ArrayList<>();
     private List<String> following = new ArrayList<>();
+    private List<String> savedPosts = new ArrayList<>();
 
     // Getters and setters
     public String getId() {
@@ -102,5 +103,13 @@ public class User {
 
     public void setFollowing(List<String> following) {
         this.following = following;
+    }
+
+    public List<String> getSavedPosts() {
+        return savedPosts;
+    }
+
+    public void setSavedPosts(List<String> savedPosts) {
+        this.savedPosts = savedPosts;
     }
 }

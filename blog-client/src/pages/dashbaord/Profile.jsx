@@ -87,6 +87,7 @@ const Profile = () => {
             { withCredentials: true }
           );
           setFollowersDetails(followersResponse.data);
+          console.log(followersResponse);
         }
 
         if (userResponse.data.following.length > 0) {

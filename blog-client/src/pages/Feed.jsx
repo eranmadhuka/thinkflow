@@ -49,20 +49,20 @@ const Feed = () => {
         );
         setFollowingPosts(followingPostsWithCounts);
 
-        // Fetch saved posts
-        const savedPostsResponse = await axios.get(
-          "http://localhost:8080/posts/saved",
-          {
-            withCredentials: true,
-          }
-        );
+        // // Fetch saved posts
+        // const savedPostsResponse = await axios.get(
+        //   "http://localhost:8080/posts/saved",
+        //   {
+        //     withCredentials: true,
+        //   }
+        // );
 
         // Get saved posts with like and comment counts
-        const savedPostsData = Array.isArray(savedPostsResponse.data)
-          ? savedPostsResponse.data
-          : [];
-        const savedPostsWithCounts = await fetchPostsWithCounts(savedPostsData);
-        setSavedPosts(savedPostsWithCounts);
+        // const savedPostsData = Array.isArray(savedPostsResponse.data)
+        //   ? savedPostsResponse.data
+        //   : [];
+        // const savedPostsWithCounts = await fetchPostsWithCounts(savedPostsData);
+        // setSavedPosts(savedPostsWithCounts);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
       } finally {
@@ -72,6 +72,49 @@ const Feed = () => {
 
     fetchPosts();
   }, []);
+
+  // useEffect(() => {
+  //   const fetchSavedPosts = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `http://localhost:8080/user/${user.id}/saved`,
+  //         { withCredentials: true }
+  //       );
+  //       setSavedPosts(response.data.savedPosts || []);
+  //       console.log(response);
+  //     } catch (error) {
+  //       console.error("Failed to fetch saved posts:", error);
+  //     }
+  //   };
+
+  //   if (user) {
+  //     fetchSavedPosts();
+  //   }
+  // }, [user]);
+
+  useEffect(() => {
+    const fetchSavedPostsDetails = async () => {
+      if (!user?.id) return; // Ensure user is defined before calling API
+
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/user/${user.id}/saved-posts`,
+          { withCredentials: true }
+        );
+
+        if (response.data && Array.isArray(response.data)) {
+          console.log("Saved posts response:", response.data);
+          setSavedPosts(response.data);
+        } else {
+          console.warn("Unexpected API response format:", response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch saved posts details:", error);
+      }
+    };
+
+    fetchSavedPostsDetails();
+  }, [user]);
 
   // Helper function to fetch like and comment counts for posts
   const fetchPostsWithCounts = async (postsArray) => {
@@ -351,25 +394,35 @@ const Feed = () => {
               <h3 className="text-lg font-bold mb-3">Recently saved</h3>
               {savedPosts.length > 0 ? (
                 <div className="space-y-3">
-                  {savedPosts.slice(0, 3).map((post) => (
-                    <Link
-                      key={post.id}
-                      to={`/posts/${post.id}`}
-                      className="block"
-                    >
-                      <h4 className="font-medium hover:underline">
-                        {post.title}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </p>
-                    </Link>
-                  ))}
+                  {savedPosts.map((post) => {
+                    console.log("Post object:", post);
+                    console.log("CreatedAt field:", post.createdAt);
+
+                    const createdAt = post.createdAt
+                      ? new Date(post.createdAt).toLocaleDateString()
+                      : "Date not available";
+
+                    return (
+                      <Link
+                        key={post.id}
+                        to={`/posts/${post.id}`}
+                        className="block"
+                      >
+                        <h4 className="font-medium hover:underline">
+                          {post.title}
+                        </h4>
+                        <p className="text-xs text-gray-500">{createdAt}</p>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-600 text-sm">No saved posts yet.</p>
               )}
-              <Link to="/saved" className="text-sm text-gray-500 block mt-3">
+              <Link
+                to="/saved-posts"
+                className="text-sm text-gray-500 block mt-3"
+              >
                 See all ({savedPosts.length})
               </Link>
             </div>

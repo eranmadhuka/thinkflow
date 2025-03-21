@@ -28,5 +28,5 @@ public interface PostRepository extends MongoRepository<Post, String> {
 
     List<Post> findByUserIn(List<User> users);
 
-
+    List<Post> findByIdIn(List<String> ids);
 }

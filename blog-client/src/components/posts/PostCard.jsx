@@ -12,12 +12,35 @@ import {
 } from "react-icons/fa";
 import { BsThreeDots } from "react-icons/bs";
 
-const PostCard = ({ post, posts, setPosts }) => {
+const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   const { user } = useContext(AuthContext);
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
+  // Check if the post is saved
+  const isSaved = savedPosts.includes(post.id);
+
+  // Fetch saved posts when the component mounts
+  useEffect(() => {
+    const fetchSavedPosts = async () => {
+      try {
+        if (user) {
+          const response = await axios.get(
+            `http://localhost:8080/user/${user.id}/saved-posts`,
+            { withCredentials: true }
+          );
+          setSavedPosts(response.data.map((p) => p.id)); // Update savedPosts state with post IDs
+        }
+      } catch (error) {
+        console.error("Failed to fetch saved posts:", error);
+      }
+    };
+
+    fetchSavedPosts();
+  }, [user, setSavedPosts]);
+
+  // Fetch post details (likes, comments, etc.)
   useEffect(() => {
     const fetchPostDetails = async () => {
       try {
@@ -76,6 +99,30 @@ const PostCard = ({ post, posts, setPosts }) => {
     }
   };
 
+  const toggleSavePost = async (postId) => {
+    try {
+      if (isSaved) {
+        // Unsave the post
+        await axios.post(
+          `http://localhost:8080/user/${user.id}/unsave/${postId}`,
+          {},
+          { withCredentials: true }
+        );
+        setSavedPosts((prev) => prev.filter((id) => id !== postId));
+      } else {
+        // Save the post
+        await axios.post(
+          `http://localhost:8080/user/${user.id}/save/${postId}`,
+          {},
+          { withCredentials: true }
+        );
+        setSavedPosts((prev) => [...prev, postId]);
+      }
+    } catch (error) {
+      console.error("Failed to save/unsave post:", error);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md mb-4 overflow-hidden">
       <div className="p-4">
@@ -106,6 +153,7 @@ const PostCard = ({ post, posts, setPosts }) => {
 
         <Link to={`/posts/${post.id}`} className="block">
           <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+          <h2 className="text-xl font-semibold mb-2">{post.id}</h2>
           <p className="text-gray-700 mb-3">
             {post.content.substring(0, 150)}...
           </p>
@@ -142,9 +190,17 @@ const PostCard = ({ post, posts, setPosts }) => {
             <span>{commentCount}</span>
           </Link>
 
-          {/* Optional: Add bookmark and share buttons if needed */}
-          <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
-            <FaRegBookmark size={18} />
+          {/* Save/Unsave button */}
+          <button
+            onClick={() => toggleSavePost(post.id)}
+            className="flex items-center space-x-1 text-gray-500 hover:text-blue-500"
+          >
+            {isSaved ? (
+              <FaBookmark className="text-blue-500" />
+            ) : (
+              <FaRegBookmark />
+            )}
+            <span>{isSaved ? "Saved" : "Save"}</span>
           </button>
 
           <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">

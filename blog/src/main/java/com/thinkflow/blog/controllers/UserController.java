@@ -1,5 +1,6 @@
 package com.thinkflow.blog.controllers;
 
+import com.thinkflow.blog.models.Post;
 import com.thinkflow.blog.models.User;
 import com.thinkflow.blog.repositories.UserRepository;
 import com.thinkflow.blog.services.UserService;
@@ -111,4 +112,37 @@ public class UserController {
         List<User> users = userService.getUsersByIds(userIds);
         return ResponseEntity.ok(users);
     }
+
+    // Save a post
+    @PostMapping("/{userId}/save/{postId}")
+    public ResponseEntity<String> savePost(
+            @PathVariable String userId,
+            @PathVariable String postId) {
+        userService.savePost(userId, postId);
+        return ResponseEntity.ok("Post saved successfully");
+    }
+
+    // Unsave a post
+    @PostMapping("/{userId}/unsave/{postId}")
+    public ResponseEntity<String> unsavePost(
+            @PathVariable String userId,
+            @PathVariable String postId) {
+        userService.unsavePost(userId, postId);
+        return ResponseEntity.ok("Post unsaved successfully");
+    }
+
+    // Fetch saved posts for a user
+    @GetMapping("/{userId}/saved")
+    public ResponseEntity<User> getSavedPosts(@PathVariable String userId) {
+        User user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
+    }
+
+    // Fetch details of saved posts
+    @GetMapping("/{userId}/saved-posts")
+    public ResponseEntity<List<Post>> getSavedPostsDetails(@PathVariable String userId) {
+        List<Post> savedPosts = userService.getSavedPostsDetails(userId);
+        return ResponseEntity.ok(savedPosts);
+    }
+
 }

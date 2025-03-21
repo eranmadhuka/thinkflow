@@ -1,8 +1,9 @@
 package com.thinkflow.blog.controllers;
 
 import com.thinkflow.blog.models.*;
-import com.thinkflow.blog.repositories.*;
 import com.thinkflow.blog.services.PostService;
+import com.thinkflow.blog.services.CommentService;
+import com.thinkflow.blog.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,163 +12,119 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * REST Controller for handling post-related operations
+ * Responsible for processing HTTP requests and delegating business logic to services
+ */
 @RestController
 @RequestMapping("/posts")
 public class PostController {
 
     @Autowired
-    private PostRepository postRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private LikeRepository likeRepository;
-
-    @Autowired
-    private CommentRepository commentRepository;
-
-    @Autowired
-    private CommentLikeRepository commentLikeRepository;
-
-    @Autowired
-    private ReplyRepository replyRepository;
-
-    @Autowired
     private PostService postService;
 
-    // Create a new post
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * Create a new post
+     * @param post Post data from request body
+     * @param principal Authenticated user information
+     * @return Created post with HTTP status
+     */
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Post post, @AuthenticationPrincipal OAuth2User principal) {
         try {
-            // Set the user ID from the authenticated user
             String userId = principal.getAttribute("sub");
-
-            // Fetch the user's details
-            User user = userRepository.findByGoogleId(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Set the user's details in the post
-            post.setUser(user);
-
-            // Set the creation date
-            post.setCreatedAt(new Date());
-
-            // Save the post to the database
-            Post savedPost = postRepository.save(post);
+            Post savedPost = postService.createPost(post, userId);
             return ResponseEntity.ok(savedPost);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // Fetch posts by user ID
+    /**
+     * Fetch posts by user ID
+     * @param userId ID of the user whose posts to fetch
+     * @return List of posts with HTTP status
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getPostsByUserId(@PathVariable String userId) {
         try {
-            List<Post> posts = postRepository.findByUserId(userId); // Fetch posts by User's MongoDB ObjectId
+            List<Post> posts = postService.getPostsByUserId(userId);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching posts");
         }
     }
 
-    // Fetch all posts for the feed
+    /**
+     * Fetch all posts for the feed, sorted by creation date
+     * @return List of posts with HTTP status
+     */
     @GetMapping("/feed")
     public ResponseEntity<?> getFeedPosts() {
         try {
-            List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc(); // Fetch all posts sorted by creation date
+            List<Post> posts = postService.getFeedPosts();
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching feed posts");
         }
     }
 
-    // Fetch a single post by ID
+    /**
+     * Fetch a single post by ID
+     * @param postId ID of the post to fetch
+     * @return Post with HTTP status
+     */
     @GetMapping("/{postId}")
     public ResponseEntity<?> getPostById(@PathVariable String postId) {
         try {
-            Optional<Post> post = postRepository.findById(postId); // Fetch post by ID
-            return post.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+            return postService.getPostById(postId)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the post");
         }
     }
 
-    // Like a post
+    /**
+     * Like or unlike a post
+     * @param postId ID of the post to like/unlike
+     * @param principal Authenticated user information
+     * @return LikeResponse with updated like count and status
+     */
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> likePost(@PathVariable String postId, @AuthenticationPrincipal OAuth2User principal) {
         try {
             String userId = principal.getAttribute("sub");
-
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
             }
 
-            // Fetch user details
-            User user = userRepository.findByGoogleId(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Check if the user already liked the post
-            Optional<Like> existingLike = likeRepository.findByPostIdAndUserId(postId, user.getId());
-
-            boolean isLiked;
-            if (existingLike.isPresent()) {
-                // Unlike the post
-                likeRepository.delete(existingLike.get());
-                isLiked = false;
-            } else {
-                // Like the post
-                Like like = new Like();
-                like.setPostId(postId);
-                like.setUser(user);
-                like.setCreatedAt(new Date());
-                likeRepository.save(like);
-                isLiked = true;
-            }
-
-            // Return updated like count and status
-            long likeCount = likeRepository.countByPostId(postId);
-            return ResponseEntity.ok(new LikeResponse(likeCount, isLiked));
-
+            return ResponseEntity.ok(postService.togglePostLike(postId, userId));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the like");
         }
     }
 
-    // DTO for response
-    class LikeResponse {
-        private long likeCount;
-        private boolean liked;
-
-        public LikeResponse(long likeCount, boolean liked) {
-            this.likeCount = likeCount;
-            this.liked = liked;
-        }
-
-        public long getLikeCount() {
-            return likeCount;
-        }
-
-        public boolean isLiked() {
-            return liked;
-        }
-    }
-
-    // Add a comment
+    /**
+     * Add a comment to a post
+     * @param postId ID of the post to comment on
+     * @param comment Comment data from request body
+     * @param principal Authenticated user information
+     * @return Created comment with HTTP status
+     */
     @PostMapping("/{postId}/comment")
     public ResponseEntity<?> addComment(
             @PathVariable String postId,
@@ -176,69 +133,72 @@ public class PostController {
     ) {
         try {
             String userId = principal.getAttribute("sub");
-
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
             }
 
-            // Fetch the user's details
-            User user = userRepository.findByGoogleId(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Set comment details
-            comment.setPostId(postId);
-            comment.setUser(user); // Set the user reference
-            comment.setCreatedAt(new Date());
-            commentRepository.save(comment);
-
-            return ResponseEntity.ok(comment);
+            Comment savedComment = commentService.addComment(postId, comment, userId);
+            return ResponseEntity.ok(savedComment);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the comment");
         }
     }
 
-    // Fetch all comments for a post
+    /**
+     * Fetch all comments for a post
+     * @param postId ID of the post to fetch comments for
+     * @return List of comments with HTTP status
+     */
     @GetMapping("/{postId}/comments")
     public ResponseEntity<?> getCommentsForPost(@PathVariable String postId) {
         try {
-            List<Comment> comments = commentRepository.findByPostId(postId);
+            List<Comment> comments = commentService.getCommentsForPost(postId);
             return ResponseEntity.ok(comments);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching comments");
         }
     }
 
-    // Fetch like count for a post
+    /**
+     * Fetch like count for a post
+     * @param postId ID of the post to fetch like count for
+     * @return Like count with HTTP status
+     */
     @GetMapping("/{postId}/like-count")
     public ResponseEntity<?> getLikeCount(@PathVariable String postId) {
         try {
-            long likeCount = likeRepository.countByPostId(postId);
+            long likeCount = postService.getLikeCount(postId);
             return ResponseEntity.ok(likeCount);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching like count");
         }
     }
 
-    // NEW ENDPOINT: Fetch users who liked a post
+    /**
+     * Fetch users who liked a post
+     * @param postId ID of the post to fetch likes for
+     * @return List of likes with HTTP status
+     */
     @GetMapping("/{postId}/likes")
     public ResponseEntity<?> getLikesForPost(@PathVariable String postId) {
         try {
-            List<Like> likes = likeRepository.findByPostId(postId);
+            List<Like> likes = postService.getLikesForPost(postId);
             return ResponseEntity.ok(likes);
         } catch (Exception e) {
-            // Log the error for debugging
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching likes");
         }
     }
 
-    // Check if the current user has liked a post
+    /**
+     * Check if the current user has liked a post
+     * @param postId ID of the post to check
+     * @param principal Authenticated user information
+     * @return Boolean indicating if user has liked the post
+     */
     @GetMapping("/{postId}/has-liked")
     public ResponseEntity<?> hasUserLikedPost(
             @PathVariable String postId,
@@ -254,83 +214,42 @@ public class PostController {
                 return ResponseEntity.ok(false);
             }
 
-            // Get the user's MongoDB ID
-            Optional<User> userOptional = userRepository.findByGoogleId(userId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.ok(false);
-            }
-
-            // Check if the user has liked the post
-            Optional<Like> like = likeRepository.findByPostIdAndUserId(postId, userOptional.get().getId());
-            return ResponseEntity.ok(like.isPresent());
+            boolean hasLiked = postService.hasUserLikedPost(postId, userId);
+            return ResponseEntity.ok(hasLiked);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while checking like status");
         }
     }
 
-    // Like a comment
+    /**
+     * Like or unlike a comment
+     * @param commentId ID of the comment to like/unlike
+     * @param principal Authenticated user information
+     * @return CommentLikeResponse with updated like count and status
+     */
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<?> likeComment(@PathVariable String commentId, @AuthenticationPrincipal OAuth2User principal) {
         try {
             String userId = principal.getAttribute("sub");
-
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
             }
 
-            // Fetch user details
-            User user = userRepository.findByGoogleId(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Check if the user already liked the comment
-            Optional<CommentLike> existingLike = commentLikeRepository.findByCommentIdAndUserId(commentId, user.getId());
-
-            boolean isLiked;
-            if (existingLike.isPresent()) {
-                // Unlike the comment
-                commentLikeRepository.delete(existingLike.get());
-                isLiked = false;
-            } else {
-                // Like the comment
-                CommentLike like = new CommentLike();
-                like.setCommentId(commentId);
-                like.setUser(user);
-                like.setCreatedAt(new Date());
-                commentLikeRepository.save(like);
-                isLiked = true;
-            }
-
-            // Return updated like count and status
-            long likeCount = commentLikeRepository.countByCommentId(commentId);
-            return ResponseEntity.ok(new CommentLikeResponse(likeCount, isLiked));
-
+            return ResponseEntity.ok(commentService.toggleCommentLike(commentId, userId));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the comment like");
         }
     }
 
-    // Response DTO for comment likes
-    class CommentLikeResponse {
-        private long likeCount;
-        private boolean liked;
-
-        public CommentLikeResponse(long likeCount, boolean liked) {
-            this.likeCount = likeCount;
-            this.liked = liked;
-        }
-
-        public long getLikeCount() {
-            return likeCount;
-        }
-
-        public boolean isLiked() {
-            return liked;
-        }
-    }
-
-    // Add a reply to a comment
+    /**
+     * Add a reply to a comment
+     * @param commentId ID of the comment to reply to
+     * @param reply Reply data from request body
+     * @param principal Authenticated user information
+     * @return Created reply with HTTP status
+     */
     @PostMapping("/comments/{commentId}/reply")
     public ResponseEntity<?> addReply(
             @PathVariable String commentId,
@@ -339,33 +258,27 @@ public class PostController {
     ) {
         try {
             String userId = principal.getAttribute("sub");
-
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
             }
 
-            // Fetch the user's details
-            User user = userRepository.findByGoogleId(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Set reply details
-            reply.setCommentId(commentId);
-            reply.setUser(user);
-            reply.setCreatedAt(new Date());
-            replyRepository.save(reply);
-
-            return ResponseEntity.ok(reply);
+            Reply savedReply = commentService.addReply(commentId, reply, userId);
+            return ResponseEntity.ok(savedReply);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the reply");
         }
     }
 
-    // Get all replies for a comment
+    /**
+     * Get all replies for a comment
+     * @param commentId ID of the comment to fetch replies for
+     * @return List of replies with HTTP status
+     */
     @GetMapping("/comments/{commentId}/replies")
     public ResponseEntity<?> getRepliesForComment(@PathVariable String commentId) {
         try {
-            List<Reply> replies = replyRepository.findByCommentId(commentId);
+            List<Reply> replies = commentService.getRepliesForComment(commentId);
             return ResponseEntity.ok(replies);
         } catch (Exception e) {
             e.printStackTrace();
@@ -373,7 +286,12 @@ public class PostController {
         }
     }
 
-    // Check if the current user has liked a comment
+    /**
+     * Check if the current user has liked a comment
+     * @param commentId ID of the comment to check
+     * @param principal Authenticated user information
+     * @return Boolean indicating if user has liked the comment
+     */
     @GetMapping("/comments/{commentId}/has-liked")
     public ResponseEntity<?> hasUserLikedComment(
             @PathVariable String commentId,
@@ -389,26 +307,23 @@ public class PostController {
                 return ResponseEntity.ok(false);
             }
 
-            // Get the user's MongoDB ID
-            Optional<User> userOptional = userRepository.findByGoogleId(userId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.ok(false);
-            }
-
-            // Check if the user has liked the comment
-            Optional<CommentLike> like = commentLikeRepository.findByCommentIdAndUserId(commentId, userOptional.get().getId());
-            return ResponseEntity.ok(like.isPresent());
+            boolean hasLiked = commentService.hasUserLikedComment(commentId, userId);
+            return ResponseEntity.ok(hasLiked);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while checking comment like status");
         }
     }
 
-    // Get comment like count
+    /**
+     * Get comment like count
+     * @param commentId ID of the comment to fetch like count for
+     * @return Like count with HTTP status
+     */
     @GetMapping("/comments/{commentId}/like-count")
     public ResponseEntity<?> getCommentLikeCount(@PathVariable String commentId) {
         try {
-            long likeCount = commentLikeRepository.countByCommentId(commentId);
+            long likeCount = commentService.getCommentLikeCount(commentId);
             return ResponseEntity.ok(likeCount);
         } catch (Exception e) {
             e.printStackTrace();
@@ -416,19 +331,18 @@ public class PostController {
         }
     }
 
-    // Fetch posts from users the logged-in user is following
+    /**
+     * Fetch posts from users the logged-in user is following
+     * @param principal Authenticated user information
+     * @return List of posts with HTTP status
+     */
     @GetMapping("/following")
     public ResponseEntity<List<Post>> getFollowingPosts(Principal principal) {
         if (principal == null) {
             throw new RuntimeException("User not authenticated");
         }
 
-        // Fetch the user using Google ID
-        User user = userRepository.findByGoogleId(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Fetch posts from followed users
-        List<Post> followingPosts = postService.getFollowingPosts(user.getId());
+        List<Post> followingPosts = postService.getFollowingPosts(principal.getName());
         return ResponseEntity.ok(followingPosts);
     }
 }

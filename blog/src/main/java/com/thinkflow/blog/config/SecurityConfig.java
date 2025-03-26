@@ -24,21 +24,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs and WebSocket
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/profile", "/logout", "/login", "/error").permitAll() // Public endpoints
+                        .requestMatchers("/user/profile", "/logout", "/login", "/error", "/ws/**").permitAll() // Allow WebSocket endpoint
                         .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:5173/feed", true) // Redirect after successful login
+                        .successHandler((request, response, authentication) -> {
+                            String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
+                                    ? request.getSession().getAttribute("redirectAfterLogin").toString()
+                                    : "http://localhost:5173/feed";
+                            response.sendRedirect(redirectUrl);
+                        })
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout") // Custom logout URL
-                        .invalidateHttpSession(true) // Invalidate session
-                        .clearAuthentication(true) // Clear authentication
-                        .deleteCookies("JSESSIONID") // Delete session cookie
-                        .addLogoutHandler(logoutHandler()) // Add custom logout handler
-                        .permitAll() // Allow everyone to access the logout endpoint
+                        .logoutUrl("/logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID")
+                        .addLogoutHandler(logoutHandler())
+                        .permitAll()
                 );
 
         return http.build();
@@ -46,20 +51,20 @@ public class SecurityConfig {
 
     @Bean
     public LogoutHandler logoutHandler() {
-        return new SecurityContextLogoutHandler(); // Handles session cleanup
+        return new SecurityContextLogoutHandler();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Allow frontend origin
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Allow React frontend
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow all HTTP methods
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
         configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
-        configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")); // Expose necessary headers
+        configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply CORS to all endpoints
+        source.registerCorsConfiguration("/**", configuration); // Apply CORS to all endpoints, including /ws/**
         return source;
     }
 }

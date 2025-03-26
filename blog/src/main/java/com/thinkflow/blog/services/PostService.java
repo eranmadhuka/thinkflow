@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Service class for handling post-related business logic
+ * Service class for handling post-related business logic in the blogging platform.
  */
 @Service
 public class PostService {
@@ -29,29 +29,54 @@ public class PostService {
     @Autowired
     private LikeRepository likeRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
-     * Create a new post
-     * @param post Post data from request
+     * Finds a post by its ID.
+     * @param postId ID of the post to find
+     * @return Optional containing the post if found
+     */
+    public Optional<Post> findById(String postId) {
+        return postRepository.findById(postId);
+    }
+
+    /**
+     * Creates a new post for the authenticated user.
+     * @param post Post data from the request
      * @param googleId Google ID of the authenticated user
      * @return Created post
      */
     public Post createPost(Post post, String googleId) {
-        // Fetch the user's details
         User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
 
-        // Set the user's details in the post
         post.setUser(user);
-
-        // Set the creation date
         post.setCreatedAt(new Date());
-
-        // Save the post to the database
         return postRepository.save(post);
     }
 
     /**
-     * Fetch posts by user ID
+     * Updates an existing post with new data.
+     * @param postId ID of the post to update
+     * @param postUpdates Updated post data
+     * @return Updated post
+     */
+    public Post updatePost(String postId, Post postUpdates) {
+        return postRepository.findById(postId)
+                .map(existingPost -> {
+                    existingPost.setTitle(postUpdates.getTitle());
+                    existingPost.setContent(postUpdates.getContent());
+                    existingPost.setMediaUrls(postUpdates.getMediaUrls());
+                    existingPost.setFileTypes(postUpdates.getFileTypes());
+                    existingPost.setTags(postUpdates.getTags());
+                    return postRepository.save(existingPost);
+                })
+                .orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
+    }
+
+    /**
+     * Retrieves all posts created by a specific user.
      * @param userId ID of the user whose posts to fetch
      * @return List of posts
      */
@@ -60,7 +85,7 @@ public class PostService {
     }
 
     /**
-     * Fetch all posts for the feed, sorted by creation date
+     * Retrieves all posts for the feed, sorted by creation date in descending order.
      * @return List of posts
      */
     public List<Post> getFeedPosts() {
@@ -68,7 +93,7 @@ public class PostService {
     }
 
     /**
-     * Fetch a single post by ID
+     * Retrieves a single post by its ID.
      * @param postId ID of the post to fetch
      * @return Optional containing the post if found
      */
@@ -77,26 +102,25 @@ public class PostService {
     }
 
     /**
-     * Toggle like status for a post
+     * Toggles like status for a post by the authenticated user.
      * @param postId ID of the post to like/unlike
      * @param googleId Google ID of the authenticated user
      * @return LikeResponse with updated like count and status
      */
     public LikeResponse togglePostLike(String postId, String googleId) {
-        // Fetch user details
         User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
 
-        // Check if the user already liked the post
         Optional<Like> existingLike = likeRepository.findByPostIdAndUserId(postId, user.getId());
-
         boolean isLiked;
+
         if (existingLike.isPresent()) {
-            // Unlike the post
             likeRepository.delete(existingLike.get());
             isLiked = false;
         } else {
-            // Like the post
+            notificationService.notifyLike(user.getName(), post.getUser().getId());
             Like like = new Like();
             like.setPostId(postId);
             like.setUser(user);
@@ -105,14 +129,13 @@ public class PostService {
             isLiked = true;
         }
 
-        // Return updated like count and status
         long likeCount = likeRepository.countByPostId(postId);
         return new LikeResponse(likeCount, isLiked);
     }
 
     /**
-     * Get like count for a post
-     * @param postId ID of the post to get like count for
+     * Retrieves the number of likes for a post.
+     * @param postId ID of the post
      * @return Number of likes
      */
     public long getLikeCount(String postId) {
@@ -120,8 +143,8 @@ public class PostService {
     }
 
     /**
-     * Get likes for a post
-     * @param postId ID of the post to get likes for
+     * Retrieves all likes for a post.
+     * @param postId ID of the post
      * @return List of likes
      */
     public List<Like> getLikesForPost(String postId) {
@@ -129,49 +152,41 @@ public class PostService {
     }
 
     /**
-     * Check if a user has liked a post
+     * Checks if a user has liked a post.
      * @param postId ID of the post to check
      * @param googleId Google ID of the user
-     * @return True if user has liked the post, false otherwise
+     * @return True if the user has liked the post, false otherwise
      */
     public boolean hasUserLikedPost(String postId, String googleId) {
-        // Get the user's MongoDB ID
         Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-        if (userOptional.isEmpty()) {
-            return false;
-        }
-
-        // Check if the user has liked the post
-        Optional<Like> like = likeRepository.findByPostIdAndUserId(postId, userOptional.get().getId());
-        return like.isPresent();
+        return userOptional.isPresent() &&
+                likeRepository.findByPostIdAndUserId(postId, userOptional.get().getId()).isPresent();
     }
 
     /**
-     * Fetch posts from users the logged-in user is following
+     * Retrieves posts from users the authenticated user is following.
      * @param googleId Google ID of the authenticated user
      * @return List of posts from followed users
      */
     public List<Post> getFollowingPosts(String googleId) {
-        // Fetch the user using Google ID
         User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
 
         List<String> followingUserIds = user.getFollowing();
         if (followingUserIds.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Fetch users being followed
         List<User> followingUsers = userRepository.findByIdIn(followingUserIds);
         return postRepository.findByUserIn(followingUsers);
     }
 
     /**
-     * Response DTO for like operations
+     * Data Transfer Object for like operation responses.
      */
     public static class LikeResponse {
-        private long likeCount;
-        private boolean liked;
+        private final long likeCount;
+        private final boolean liked;
 
         public LikeResponse(long likeCount, boolean liked) {
             this.likeCount = likeCount;

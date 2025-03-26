@@ -2,12 +2,16 @@ package com.thinkflow.blog.services;
 
 import com.thinkflow.blog.models.Comment;
 import com.thinkflow.blog.models.CommentLike;
+import com.thinkflow.blog.models.Post;
 import com.thinkflow.blog.models.Reply;
 import com.thinkflow.blog.models.User;
 import com.thinkflow.blog.repositories.CommentLikeRepository;
 import com.thinkflow.blog.repositories.CommentRepository;
+import com.thinkflow.blog.repositories.PostRepository;
 import com.thinkflow.blog.repositories.ReplyRepository;
 import com.thinkflow.blog.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +25,8 @@ import java.util.Optional;
 @Service
 public class CommentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CommentService.class);
+
     @Autowired
     private CommentRepository commentRepository;
 
@@ -33,24 +39,45 @@ public class CommentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PostRepository postRepository; // Added to fetch post details
+
+    @Autowired
+    private NotificationService notificationService;
+
     /**
-     * Add a comment to a post
+     * Adds a comment to a post and notifies the post's author.
      * @param postId ID of the post to comment on
      * @param comment Comment data
      * @param googleId Google ID of the authenticated user
      * @return Created comment
      */
     public Comment addComment(String postId, Comment comment, String googleId) {
-        // Fetch the user's details
+        // Fetch the user's details (commenter)
         User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
+
+        // Fetch the post to get the author's ID
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
 
         // Set comment details
         comment.setPostId(postId);
         comment.setUser(user);
         comment.setCreatedAt(new Date());
-        return commentRepository.save(comment);
+
+        // Notify the post's author
+        String authorId = post.getUser().getId();
+        logger.info("Notifying post author {} about comment by {}", authorId, user.getName());
+        notificationService.notifyComment(user.getName(), authorId, comment.getContent());
+
+        // Save and return the comment
+        Comment savedComment = commentRepository.save(comment);
+        logger.info("Comment saved with ID: {}", savedComment.getId());
+        return savedComment;
     }
+
+    // Other existing methods remain unchanged...
 
     /**
      * Get all comments for a post
@@ -68,20 +95,14 @@ public class CommentService {
      * @return CommentLikeResponse with updated like count and status
      */
     public CommentLikeResponse toggleCommentLike(String commentId, String googleId) {
-        // Fetch user details
         User user = userRepository.findByGoogleId(googleId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Check if the user already liked the comment
         Optional<CommentLike> existingLike = commentLikeRepository.findByCommentIdAndUserId(commentId, user.getId());
-
         boolean isLiked;
         if (existingLike.isPresent()) {
-            // Unlike the comment
             commentLikeRepository.delete(existingLike.get());
             isLiked = false;
         } else {
-            // Like the comment
             CommentLike like = new CommentLike();
             like.setCommentId(commentId);
             like.setUser(user);
@@ -89,8 +110,6 @@ public class CommentService {
             commentLikeRepository.save(like);
             isLiked = true;
         }
-
-        // Return updated like count and status
         long likeCount = commentLikeRepository.countByCommentId(commentId);
         return new CommentLikeResponse(likeCount, isLiked);
     }
@@ -103,11 +122,8 @@ public class CommentService {
      * @return Created reply
      */
     public Reply addReply(String commentId, Reply reply, String googleId) {
-        // Fetch the user's details
         User user = userRepository.findByGoogleId(googleId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Set reply details
         reply.setCommentId(commentId);
         reply.setUser(user);
         reply.setCreatedAt(new Date());
@@ -130,15 +146,9 @@ public class CommentService {
      * @return True if user has liked the comment, false otherwise
      */
     public boolean hasUserLikedComment(String commentId, String googleId) {
-        // Get the user's MongoDB ID
         Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-        if (userOptional.isEmpty()) {
-            return false;
-        }
-
-        // Check if the user has liked the comment
-        Optional<CommentLike> like = commentLikeRepository.findByCommentIdAndUserId(commentId, userOptional.get().getId());
-        return like.isPresent();
+        return userOptional.isPresent() &&
+                commentLikeRepository.findByCommentIdAndUserId(commentId, userOptional.get().getId()).isPresent();
     }
 
     /**
@@ -154,8 +164,8 @@ public class CommentService {
      * Response DTO for comment like operations
      */
     public static class CommentLikeResponse {
-        private long likeCount;
-        private boolean liked;
+        private final long likeCount;
+        private final boolean liked;
 
         public CommentLikeResponse(long likeCount, boolean liked) {
             this.likeCount = likeCount;

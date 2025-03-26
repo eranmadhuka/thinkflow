@@ -1,6 +1,7 @@
 package com.thinkflow.blog.controllers;
 
 import com.thinkflow.blog.models.*;
+import com.thinkflow.blog.repositories.UserRepository;
 import com.thinkflow.blog.services.PostService;
 import com.thinkflow.blog.services.CommentService;
 import com.thinkflow.blog.services.UserService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST Controller for handling post-related operations
@@ -31,6 +33,9 @@ public class PostController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * Create a new post
      * @param post Post data from request body
@@ -43,6 +48,46 @@ public class PostController {
             String userId = principal.getAttribute("sub");
             Post savedPost = postService.createPost(post, userId);
             return ResponseEntity.ok(savedPost);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    // Update post
+    @PutMapping("/{postId}")
+    public ResponseEntity<Post> updatePost(
+            @PathVariable String postId,
+            @RequestBody Post postUpdates,
+            @AuthenticationPrincipal OAuth2User principal) {
+        try {
+            String googleId = principal.getAttribute("sub"); // Get Google ID from OAuth
+
+            // Find user by Google ID
+            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            User user = userOptional.get(); // Logged-in user from DB
+
+            // Get post from DB
+            Optional<Post> existingPost = postService.findById(postId);
+            if (existingPost.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Post post = existingPost.get();
+
+            // Check if the logged-in user is the post owner (MongoDB ObjectId comparison)
+            if (!post.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Update post
+            Post updatedPost = postService.updatePost(postId, postUpdates);
+            return ResponseEntity.ok(updatedPost);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

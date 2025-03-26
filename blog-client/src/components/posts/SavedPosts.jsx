@@ -2,10 +2,12 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
+import PostCard from "./PostCard";
 
 const SavedPosts = () => {
   const [savedPosts, setSavedPosts] = useState([]);
   const { user } = useContext(AuthContext);
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     const fetchSavedPostsDetails = async () => {
@@ -31,33 +33,67 @@ const SavedPosts = () => {
     fetchSavedPostsDetails();
   }, [user]);
 
+  // Function to handle liking a post
+  const handleLikePost = async (postId) => {
+    if (!user) {
+      // Redirect to login or show login modal
+      alert("Please log in to like posts");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `http://localhost:8080/posts/${postId}/like`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Update posts state to reflect the like
+      const updatePostsState = (postsArray) => {
+        return postsArray.map((post) => {
+          if (post.id === postId) {
+            const newLikeCount = post.hasLiked
+              ? post.likeCount - 1
+              : post.likeCount + 1;
+            return {
+              ...post,
+              likeCount: newLikeCount,
+              hasLiked: !post.hasLiked,
+            };
+          }
+          return post;
+        });
+      };
+
+      setPosts(updatePostsState(posts));
+      setFollowingPosts(updatePostsState(followingPosts));
+      setSavedPosts(updatePostsState(savedPosts));
+    } catch (error) {
+      console.error("Failed to like post:", error);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg p-4">
+    <div className="container mx-auto px-4 py-0">
       <h3 className="text-lg font-bold mb-3">Recently saved</h3>
       {savedPosts.length > 0 ? (
-        <div className="space-y-3">
-          {savedPosts.map((post) => {
-            console.log("Post object:", post);
-            console.log("CreatedAt field:", post.createdAt);
-
-            const createdAt = post.createdAt
-              ? new Date(post.createdAt).toLocaleDateString()
-              : "Date not available";
-
-            return (
-              <Link key={post.id} to={`/posts/${post.id}`} className="block">
-                <h4 className="font-medium hover:underline">{post.title}</h4>
-                <p className="text-xs text-gray-500">{createdAt}</p>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {savedPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              savedPosts={savedPosts}
+              posts={posts}
+              setPosts={setPosts}
+              user={user}
+            />
+          ))}
         </div>
       ) : (
         <p className="text-gray-600 text-sm">No saved posts yet.</p>
       )}
-      <Link to="/saved" className="text-sm text-gray-500 block mt-3">
-        See all ({savedPosts.length})
-      </Link>
     </div>
   );
 };

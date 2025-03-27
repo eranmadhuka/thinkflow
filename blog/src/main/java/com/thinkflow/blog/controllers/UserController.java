@@ -91,12 +91,33 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-
     // Fetch user by ID (alternative to getUserProfileById)
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
         Optional<User> user = userRepository.findById(id); // Fetch user by MongoDB ID
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<String> deleteAccount(
+            @PathVariable String userId,
+            @AuthenticationPrincipal OAuth2User principal) {
+        String googleId = principal.getAttribute("sub");
+        User currentUser = userRepository.findByGoogleId(googleId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!currentUser.getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("You can only delete your own account");
+        }
+
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok("Account deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete account: " + e.getMessage());
+        }
     }
 
     // Update user profile
@@ -124,6 +145,8 @@ public class UserController {
         userRepository.save(user);
         return ResponseEntity.ok(user);
     }
+
+
 
     @PostMapping("/{followerId}/follow/{followeeId}")
     public ResponseEntity<String> followUser(

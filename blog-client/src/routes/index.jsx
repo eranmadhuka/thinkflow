@@ -15,7 +15,7 @@ import Profile from "../pages/private/Profile";
 import PostDetail from "../components/posts/PostDetail";
 import UpdateProfile from "../pages/private/UpdateProfile";
 import AddBlogPost from "../components/posts/AddBlogPost";
-import SavedPosts from "../components/posts/SavedPosts";
+import SavedPosts from "../pages/private/SavedPosts";
 import PeopleList from "../pages/private/PeopleList";
 import EditPost from "../components/posts/EditPost";
 import FriendsList from "../pages/private/FriendsList";
@@ -65,11 +65,6 @@ export const router = createBrowserRouter([
             path: "/notifications",
             element: <Notifications />,
           },
-        ],
-      },
-      {
-        element: <CommonLayout />,
-        children: [
           {
             path: "/profile",
             element: <Profile />,
@@ -94,6 +89,27 @@ export const router = createBrowserRouter([
             path: "/posts/:postId/edit",
             element: <EditPost />,
           },
+        ],
+      },
+      {
+        element: <CommonLayout />,
+        children: [
+          // {
+          //   path: "/update-profile",
+          //   element: <UpdateProfile />,
+          // },
+          // {
+          //   path: "/posts/add",
+          //   element: <AddBlogPost />,
+          // },
+          // {
+          //   path: "/posts/:postId",
+          //   element: <PostDetail />,
+          // },
+          // {
+          //   path: "/posts/:postId/edit",
+          //   element: <EditPost />,
+          // },
         ],
       },
     ],

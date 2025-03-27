@@ -9,7 +9,7 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [followingPosts, setFollowingPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savedPosts, setSavedPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]); // Array of post IDs
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -20,12 +20,8 @@ const Feed = () => {
         // Fetch all posts for "For You" tab
         const allPostsResponse = await axios.get(
           "http://localhost:8080/posts/feed",
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
-
-        // Get posts with like and comment counts
         const postsData = Array.isArray(allPostsResponse.data)
           ? allPostsResponse.data
           : [];
@@ -35,12 +31,8 @@ const Feed = () => {
         // Fetch following posts
         const followingPostsResponse = await axios.get(
           "http://localhost:8080/posts/following",
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
-
-        // Get following posts with like and comment counts
         const followingPostsData = Array.isArray(followingPostsResponse.data)
           ? followingPostsResponse.data
           : [];
@@ -60,7 +52,7 @@ const Feed = () => {
 
   useEffect(() => {
     const fetchSavedPostsDetails = async () => {
-      if (!user?.id) return; // Ensure user is defined before calling API
+      if (!user?.id) return;
 
       try {
         const response = await axios.get(
@@ -69,13 +61,18 @@ const Feed = () => {
         );
 
         if (response.data && Array.isArray(response.data)) {
-          console.log("Saved posts response:", response.data);
-          setSavedPosts(response.data);
+          // Assuming API returns full post objects, extract IDs
+          const savedPostIds = response.data.map((post) =>
+            typeof post === "object" ? post.id : post
+          );
+          setSavedPosts(savedPostIds);
         } else {
           console.warn("Unexpected API response format:", response.data);
+          setSavedPosts([]);
         }
       } catch (error) {
         console.error("Failed to fetch saved posts details:", error);
+        setSavedPosts([]);
       }
     };
 
@@ -86,35 +83,23 @@ const Feed = () => {
   const fetchPostsWithCounts = async (postsArray) => {
     try {
       const postsWithCountsPromises = postsArray.map(async (post) => {
-        // Fetch like count
         const likesResponse = await axios.get(
           `http://localhost:8080/posts/${post.id}/like-count`,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
-
-        // Fetch comment count
         const commentsResponse = await axios.get(
           `http://localhost:8080/posts/${post.id}/comments`,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
-
-        // Check if user has liked the post
         let hasLiked = false;
         if (user) {
           const userLikeResponse = await axios.get(
             `http://localhost:8080/posts/${post.id}/has-liked`,
-            {
-              withCredentials: true,
-            }
+            { withCredentials: true }
           );
           hasLiked = userLikeResponse.data;
         }
 
-        // Return post with additional data
         return {
           ...post,
           likeCount: likesResponse.data,
@@ -128,14 +113,13 @@ const Feed = () => {
       return await Promise.all(postsWithCountsPromises);
     } catch (error) {
       console.error("Error fetching post counts:", error);
-      return postsArray; // Return original posts if there's an error
+      return postsArray;
     }
   };
 
   // Function to handle liking a post
   const handleLikePost = async (postId) => {
     if (!user) {
-      // Redirect to login or show login modal
       alert("Please log in to like posts");
       return;
     }
@@ -144,31 +128,37 @@ const Feed = () => {
       await axios.post(
         `http://localhost:8080/posts/${postId}/like`,
         {},
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
 
-      // Update posts state to reflect the like
-      const updatePostsState = (postsArray) => {
-        return postsArray.map((post) => {
-          if (post.id === postId) {
-            const newLikeCount = post.hasLiked
-              ? post.likeCount - 1
-              : post.likeCount + 1;
-            return {
-              ...post,
-              likeCount: newLikeCount,
-              hasLiked: !post.hasLiked,
-            };
-          }
-          return post;
-        });
-      };
+      const updatePostsState = (postsArray) =>
+        postsArray.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likeCount: post.hasLiked
+                  ? post.likeCount - 1
+                  : post.likeCount + 1,
+                hasLiked: !post.hasLiked,
+              }
+            : post
+        );
 
       setPosts(updatePostsState(posts));
       setFollowingPosts(updatePostsState(followingPosts));
-      setSavedPosts(updatePostsState(savedPosts));
+      setSavedPosts((prevSavedPosts) =>
+        prevSavedPosts.map((savedPost) =>
+          savedPost.id === postId
+            ? {
+                ...savedPost,
+                likeCount: savedPost.hasLiked
+                  ? savedPost.likeCount - 1
+                  : savedPost.likeCount + 1,
+                hasLiked: !savedPost.hasLiked,
+              }
+            : savedPost
+        )
+      );
     } catch (error) {
       console.error("Failed to like post:", error);
     }
@@ -180,60 +170,47 @@ const Feed = () => {
 
   return (
     <div className="w-full">
-      <div className="min-h-screen">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="border-b flex mb-4">
-            <button
-              className={`px-4 py-2 mr-4 font-medium ${
-                activeTab === "for-you"
-                  ? "border-b-2 border-black"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("for-you")}
-            >
-              For you
-            </button>
-            <button
-              className={`px-4 py-2 font-medium ${
-                activeTab === "following"
-                  ? "border-b-2 border-black"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("following")}
-            >
-              Following
-            </button>
-          </div>
+      <header className="mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+          Your Feed
+        </h2>
+        <p className="mt-1 text-sm sm:text-base text-gray-600">
+          Catch up with the latest posts from your network
+        </p>
+      </header>
 
-          {/* Post Feed */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {activeTab === "for-you" ? (
-              posts.length > 0 ? (
-                posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    savedPosts={savedPosts}
-                    setSavedPosts={setSavedPosts}
-                    posts={posts}
-                    setPosts={setPosts}
-                    followingPosts={followingPosts}
-                    setFollowingPosts={setFollowingPosts}
-                    handleLikePost={handleLikePost}
-                    user={user}
-                  />
-                ))
-              ) : (
-                <p className="text-gray-600 p-4">
-                  No posts available in your feed.
-                </p>
-              )
-            ) : followingPosts.length > 0 ? (
-              followingPosts.map((post) => (
+      <div className="space-y-6">
+        <div className="border-b flex mb-4">
+          <button
+            className={`px-4 py-2 mr-4 font-medium ${
+              activeTab === "for-you"
+                ? "border-b-2 border-black"
+                : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab("for-you")}
+          >
+            For you
+          </button>
+          <button
+            className={`px-4 py-2 font-medium ${
+              activeTab === "following"
+                ? "border-b-2 border-black"
+                : "text-gray-500"
+            }`}
+            onClick={() => setActiveTab("following")}
+          >
+            Following
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {activeTab === "for-you" ? (
+            posts.length > 0 ? (
+              posts.map((post) => (
                 <PostCard
                   key={post.id}
                   post={post}
-                  savedPosts={savedPosts}
+                  savedPosts={savedPosts} // Array of IDs
                   setSavedPosts={setSavedPosts}
                   posts={posts}
                   setPosts={setPosts}
@@ -244,14 +221,33 @@ const Feed = () => {
                 />
               ))
             ) : (
-              <div className="text-gray-600 p-4 col-span-1 lg:col-span-2">
-                <p>You don't follow anyone yet.</p>
-                <p className="mt-2">
-                  Follow some authors to see their posts here!
-                </p>
-              </div>
-            )}
-          </div>
+              <p className="text-gray-600 p-4">
+                No posts available in your feed.
+              </p>
+            )
+          ) : followingPosts.length > 0 ? (
+            followingPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                savedPosts={savedPosts}
+                setSavedPosts={setSavedPosts}
+                posts={posts}
+                setPosts={setPosts}
+                followingPosts={followingPosts}
+                setFollowingPosts={setFollowingPosts}
+                handleLikePost={handleLikePost}
+                user={user}
+              />
+            ))
+          ) : (
+            <div className="text-gray-600 p-4 col-span-1 lg:col-span-2">
+              <p>You don't follow anyone yet.</p>
+              <p className="mt-2">
+                Follow some authors to see their posts here!
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

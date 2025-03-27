@@ -3,6 +3,7 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { router } from "./routes/index";
 import React, { useContext } from "react";
+import "./App.css";
 
 function App() {
   return (

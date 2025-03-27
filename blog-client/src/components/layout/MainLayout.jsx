@@ -9,9 +9,9 @@ const MainLayout = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
+        setSidebarOpen(true); // Desktop: Sidebar always visible
       } else {
-        setSidebarOpen(false);
+        setSidebarOpen(false); // Mobile: Sidebar hidden by default
       }
     };
 
@@ -26,43 +26,40 @@ const MainLayout = () => {
       {/* Header */}
       <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
+      <div className="flex flex-1">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Mobile Sidebar */}
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+          className={`
+            fixed top-14 left-0 w-64 h-[calc(100%-3rem)] z-50 
+            transform transition-transform duration-300 ease-in-out
+            lg:hidden
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          `}
+        >
+          <Sidebar />
+        </div>
 
-      {/* Main Content Area */}
-      <div className="flex justify-center flex-1 w-full mx-auto max-w-screen-xl px-4 md:px-6 lg:px-8 pt-10">
-        <div className="flex w-full max-w-full mx-auto">
-          {/* Sidebar - Mobile & Desktop Responsive */}
-          <div
-            className={`
-              hidden lg:block lg:w-64 mr-6 
-              ${sidebarOpen ? "block" : "hidden"}
-            `}
-          >
-            <Sidebar />
+        {/* Main Content Area */}
+        <div className="flex flex-1 justify-center w-full mx-auto max-w-screen-xl px-4 md:px-6 lg:px-8 pt-10">
+          <div className="flex w-full max-w-full mx-auto">
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:block lg:w-64 mr-6 h-fit static">
+              <Sidebar />
+            </div>
+
+            {/* Main Content Column */}
+            <main className="flex-1 max-w-full">
+              <Outlet />
+            </main>
           </div>
-
-          {/* Mobile Sidebar */}
-          <div
-            className={`
-              fixed inset-y-0 left-0 w-64 z-50 
-              transform transition-transform duration-300 ease-in-out
-              lg:hidden
-              ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-            `}
-          >
-            <Sidebar />
-          </div>
-
-          {/* Main Content Column */}
-          <main className="flex-1 max-w-full">
-            <Outlet />
-          </main>
         </div>
       </div>
     </div>

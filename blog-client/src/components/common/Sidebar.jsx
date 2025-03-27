@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home,
@@ -9,14 +9,12 @@ import {
   Bell,
   Settings,
 } from "lucide-react";
-import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
+import UserImg from "../../assets/images/user.png";
 
 const Sidebar = () => {
-  // const { user } = useContext(AuthContext);
   const location = useLocation();
   const [loading, setLoading] = useState(true);
-
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
 
@@ -32,24 +30,20 @@ const Sidebar = () => {
     { value: "Prefer Not to Say", emoji: "🤐", description: "Private matters" },
   ];
 
-  // Function to determine if a link is active
-  const isActive = (path) => {
-    return location.pathname === path
+  const isActive = (path) =>
+    location.pathname === path
       ? "bg-blue-50 text-blue-600 font-semibold"
       : "text-gray-700 hover:bg-gray-100";
-  };
 
   useEffect(() => {
     const fetchUserStats = async () => {
       try {
-        // Get the current user's profile
         const userResponse = await axios.get(
           "http://localhost:8080/user/profile",
           { withCredentials: true }
         );
         setUser(userResponse.data);
 
-        // Get the current user's posts
         const postsResponse = await axios.get(
           `http://localhost:8080/posts/user/${userResponse.data.id}`,
           { withCredentials: true }
@@ -84,44 +78,29 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="flex flex-col w-64 bg-white rounded-lg border border-gray-100 shadow-sm overflow-y-auto">
+    <aside className="flex flex-col w-64 h-full bg-white border border-gray-100 shadow-lg overflow-y-auto">
       {/* Profile Section */}
       <div className="p-4 border-b border-gray-100 text-center">
-        {/* Profile Image with mountain background */}
         <div className="relative mb-3">
           <div className="h-16 rounded-t-lg bg-gradient-to-r from-blue-100 to-purple-100"></div>
           <div
             className="absolute w-full flex justify-center"
             style={{ top: "50%" }}
           >
-            <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-orange-400 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full border-3 border-white overflow-hidden  flex items-center justify-center">
               <img
-                src={user.picture || "https://via.placeholder.com/40"}
+                src={user.picture ? user.picture : UserImg}
                 alt="User Avatar"
-                className="h-full w-full rounded-full object-cover"
+                className="h-full w-full sm:h-full sm:w-full rounded-full object-cover border border-gray-200"
               />
             </div>
           </div>
         </div>
-
-        {/* Profile details with spacing for the avatar */}
         <div className="mt-10">
           <h2 className="font-bold text-lg">{user.name}</h2>
           <p className="text-sm text-gray-600">{user.email}</p>
           <p className="text-xs mt-2 text-gray-500 italic">{user.bio}</p>
-          {/* <span className="text-xl mr-2">
-            {statusOptions.find((option) => option.value === user.status)
-              ?.emoji || "❓"}
-          </span>
-          <span>
-            {
-              statusOptions.find((option) => option.value === user.status)
-                ?.description
-            }
-          </span> */}
         </div>
-
-        {/* Stats */}
         <div className="flex justify-between mt-4 text-sm">
           <div>
             <p className="font-bold">{posts.length}</p>

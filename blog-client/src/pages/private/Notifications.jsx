@@ -5,32 +5,44 @@ const Notifications = () => {
   const { notifications, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Notifications</h2>
-        <button
-          onClick={markAllAsRead}
-          className="text-sm text-emerald-600 hover:underline"
-        >
-          Mark all as read
-        </button>
+    <div className="w-full px-4 sm:px-6 lg:px-0">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <header>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+            Notifications
+          </h2>
+          <p className="mt-1 text-sm sm:text-base text-gray-600">
+            Stay updated with your latest alerts
+          </p>
+        </header>
+        {notifications.length > 0 && (
+          <button
+            onClick={markAllAsRead}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors duration-200"
+          >
+            Mark all as read
+          </button>
+        )}
       </div>
+
+      {/* Notifications List */}
       {notifications.length > 0 ? (
-        <ul className="space-y-2">
+        <ul className="space-y-4">
           {notifications.map((notif, index) => (
             <li
               key={index}
-              className={`p-4 rounded-md flex justify-between items-center ${
+              className={`p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
                 notif.read
-                  ? "bg-gray-100 text-gray-500"
-                  : "bg-gray-50 text-gray-700"
-              }`}
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-white text-gray-800"
+              } transition-colors duration-200`}
             >
-              <span>{notif.message}</span>
+              <span className="text-sm sm:text-base">{notif.message}</span>
               {!notif.read && (
                 <button
                   onClick={() => markAsRead(index)}
-                  className="text-sm text-emerald-600 hover:underline"
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors duration-200"
                 >
                   Mark as read
                 </button>
@@ -39,7 +51,10 @@ const Notifications = () => {
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500">No new notifications</p>
+        <div className="text-center text-gray-500 mt-12">
+          <p className="text-lg sm:text-xl">No new notifications</p>
+          <p className="text-sm mt-2">You're all caught up!</p>
+        </div>
       )}
     </div>
   );

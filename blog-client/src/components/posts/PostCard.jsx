@@ -12,14 +12,14 @@ import {
   UserMinus,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
+import UserImg from "../../assets/images/user.png";
 
 const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   const { user } = useContext(AuthContext);
-  const [likes, setLikes] = useState(0);
-  const [hasLiked, setHasLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likeCount || 0);
+  const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
   const [commentCount, setCommentCount] = useState(0);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const [isSavedState, setIsSavedState] = useState(false);
 
   const formatDate = (dateString) => {
     try {
@@ -36,9 +36,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     }
   };
 
-  // Check if the post is saved
-  const isSaved = savedPosts?.includes(post.id);
-  // Check if the post belongs to the current user
+  const isSaved = savedPosts?.includes(post.id); // Determined by savedPosts prop
   const isOwnPost = user && post.user?.id === user.id;
 
   useEffect(() => {
@@ -71,28 +69,8 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     fetchPostDetails();
   }, [post.id, user]);
 
-  // Fetch saved posts when the component mounts
-  useEffect(() => {
-    const fetchSavedPosts = async () => {
-      try {
-        if (user) {
-          const response = await axios.get(
-            `http://localhost:8080/user/${user.id}/saved-posts`,
-            { withCredentials: true }
-          );
-          setSavedPosts(response.data.map((p) => p.id));
-        }
-      } catch (error) {
-        console.error("Failed to fetch saved posts:", error);
-      }
-    };
-
-    fetchSavedPosts();
-  }, [user, setSavedPosts]);
-
   const handleLike = async () => {
     if (!user) return alert("You must be logged in to like posts.");
-
     try {
       await axios.post(
         `http://localhost:8080/posts/${post.id}/like`,
@@ -106,22 +84,21 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     }
   };
 
-  useEffect(() => {
-    setIsSavedState(savedPosts?.includes(post.id));
-  }, [savedPosts, post.id]); // Sync when `savedPosts` changes
-
   const toggleSavePost = async (postId) => {
     if (!user) return alert("You must be logged in to save posts.");
 
     try {
-      if (isSavedState) {
+      if (isSaved) {
+        // Unsave the post
         await axios.post(
           `http://localhost:8080/user/${user.id}/unsave/${postId}`,
           {},
           { withCredentials: true }
         );
         setSavedPosts((prev) => prev.filter((id) => id !== postId));
+        // Do NOT update posts here; let it stay in the Feed
       } else {
+        // Save the post
         await axios.post(
           `http://localhost:8080/user/${user.id}/save/${postId}`,
           {},
@@ -133,12 +110,12 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
       console.error("Failed to save/unsave post:", error);
     }
   };
+
   const handleDeletePost = async () => {
     try {
       await axios.delete(`http://localhost:8080/posts/${post.id}`, {
         withCredentials: true,
       });
-      // Remove the post from the list
       setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
     } catch (error) {
       console.error("Failed to delete post:", error);
@@ -162,13 +139,12 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden mb-4 relative">
-      {/* Post Header */}
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link to={`/profile/${post.user?.id}`}>
               <img
-                src={post.user?.picture || "https://via.placeholder.com/40"}
+                src={post.user?.picture ? post.user?.picture : UserImg}
                 alt={post.user?.name || "User"}
                 className="w-10 h-10 rounded-full object-cover"
               />
@@ -192,12 +168,10 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
             >
               <MoreHorizontal size={20} />
             </button>
-
             {isOptionsOpen && (
-              <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+              <div className="absolute right-0 z-20 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 transform transition-all duration-200 ease-in-out origin-top-right scale-95 opacity-0 animate-dropdown">
                 <div className="py-1" role="menu" aria-orientation="vertical">
                   {isOwnPost ? (
-                    // Options for own posts
                     <>
                       <Link
                         to={`/posts/${post.id}/edit`}
@@ -215,7 +189,6 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
                       </button>
                     </>
                   ) : (
-                    // Options for other users' posts
                     <>
                       <button
                         onClick={() => toggleSavePost(post.id)}
@@ -244,21 +217,22 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
       <Link to={`/posts/${post.id}`} className="block p-4 pt-3">
         <h2 className="text-lg font-medium text-gray-900 mb-2">{post.title}</h2>
         <p className="text-gray-600 text-sm">
-          {post.content.substring(0, 150)}...
+          {post.content
+            ? `${post.content.substring(0, 150)}...`
+            : "No content available"}
         </p>
       </Link>
 
       {post.mediaUrls?.length > 0 && (
         <Link to={`/posts/${post.id}`} className="block px-4 pb-4">
           <img
-            src={post.mediaUrls[0]}
+            src={post.mediaUrls[0] ? post.mediaUrls[0] : UserImg}
             alt="Post media"
             className="w-full h-52 object-cover rounded-lg"
           />
         </Link>
       )}
 
-      {/* Post Action */}
       <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <button
@@ -273,7 +247,6 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
             <span className="text-sm">Like</span>
             <span className="text-sm">({likes})</span>
           </button>
-
           <Link
             to={`/posts/${post.id}`}
             className="flex items-center space-x-1 text-gray-500 hover:text-gray-700"
@@ -283,7 +256,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
             <span className="text-sm">({commentCount})</span>
           </Link>
         </div>
-        {/* <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
           <button
             onClick={() => toggleSavePost(post.id)}
             className={`flex items-center space-x-1 ${
@@ -294,7 +267,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
           >
             <Bookmark size={20} className={isSaved ? "fill-current" : ""} />
           </button>
-        </div> */}
+        </div>
       </div>
     </div>
   );

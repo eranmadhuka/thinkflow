@@ -19,6 +19,10 @@ public class Comment {
 
     private String content; // Content of the comment
     private Date createdAt; // Timestamp for when the comment was created
+    private Date updatedAt; // Timestamp for when the comment was last updated
+
+    // Constructors
+    public Comment() {}
 
     // Getters and Setters
     public String getId() {
@@ -49,8 +53,8 @@ public class Comment {
         return content;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setContent(String newContent) {
+        this.content = newContent;
     }
 
     public Date getCreatedAt() {
@@ -59,5 +63,13 @@ public class Comment {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

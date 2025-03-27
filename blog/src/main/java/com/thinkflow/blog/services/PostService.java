@@ -181,6 +181,12 @@ public class PostService {
         return postRepository.findByUserIn(followingUsers);
     }
 
+    public void deletePost(String postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        postRepository.delete(post);
+    }
+
     /**
      * Data Transfer Object for like operation responses.
      */

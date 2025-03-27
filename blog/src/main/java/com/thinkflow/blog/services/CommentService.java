@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,9 @@ public class CommentService {
     @Autowired
     private NotificationService notificationService;
 
+    public Optional<Comment> findById(String commentId) {
+        return commentRepository.findById(commentId);
+    }
     /**
      * Adds a comment to a post and notifies the post's author.
      * @param postId ID of the post to comment on
@@ -86,6 +90,20 @@ public class CommentService {
      */
     public List<Comment> getCommentsForPost(String postId) {
         return commentRepository.findByPostId(postId);
+    }
+
+    public void deleteComment(String commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+        commentRepository.delete(comment);
+    }
+
+    public Comment updateComment(String commentId, String newContent) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+        comment.setContent(newContent);
+        comment.setUpdatedAt(new Date()); // Use new Date() if using Date, or LocalDateTime.now() if using LocalDateTime
+        return commentRepository.save(comment);
     }
 
     /**

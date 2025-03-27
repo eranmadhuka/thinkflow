@@ -13,7 +13,6 @@ const PeopleList = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      // Fetch logged-in user
       const loggedInResponse = await axios.get(
         "http://localhost:8080/user/profile",
         { withCredentials: true }
@@ -21,17 +20,15 @@ const PeopleList = () => {
       const loggedInUserData = loggedInResponse.data;
       setLoggedInUser(loggedInUserData);
 
-      // Fetch all users
       const usersResponse = await axios.get(
         "http://localhost:8080/user/users",
         { withCredentials: true }
       );
 
-      // Filter out the logged-in user and users they are already following
       const notFollowingUsers = usersResponse.data.filter(
         (user) =>
-          user.id !== loggedInUserData.id && // Exclude logged-in user
-          !loggedInUserData.following?.includes(user.id) // Exclude followed users
+          user.id !== loggedInUserData.id &&
+          !loggedInUserData.following?.includes(user.id)
       );
 
       setUsers(notFollowingUsers);
@@ -47,7 +44,6 @@ const PeopleList = () => {
     fetchData();
   }, [fetchData]);
 
-  // Handler to update follow status globally
   const handleFollowToggle = (userId, isFollowing) => {
     setLoggedInUser((prev) => ({
       ...prev,
@@ -56,14 +52,12 @@ const PeopleList = () => {
         : (prev.following || []).filter((id) => id !== userId),
     }));
 
-    // Update users list: remove user if they are followed
     if (isFollowing) {
       setUsers((prev) => prev.filter((user) => user.id !== userId));
       setFilteredUsers((prev) => prev.filter((user) => user.id !== userId));
     }
   };
 
-  // Search and filter handlers
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
@@ -77,25 +71,23 @@ const PeopleList = () => {
   };
 
   const filterUsers = (term, filter) => {
-    let result = users;
+    let result = [...users]; // Create a copy of the original users array
 
-    // Search filter
-    if (term) {
+    // Apply search filter
+    if (term.trim()) {
       result = result.filter(
         (user) =>
-          user.name.toLowerCase().includes(term) ||
-          user.email.toLowerCase().includes(term)
+          user.name?.toLowerCase().includes(term) ||
+          user.email?.toLowerCase().includes(term)
       );
     }
 
-    // Additional filter options (only applied to not-followed users)
+    // Apply additional filter options
     switch (filter) {
       case "followers":
         result = result.filter((user) => (user.followers?.length || 0) > 0);
         break;
-      // Removed "notFollowing" option since we're already showing only not-followed users
       default:
-        // "all" - show all not-followed users
         break;
     }
 
@@ -105,51 +97,59 @@ const PeopleList = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-0">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-lg font-bold text-center">
-          People You Might Know (Not Following)
-        </h3>
+    <div className="w-full px-4 sm:px-6 lg:px-0">
+      {/* Header and Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <header>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+            People You Might Know
+          </h2>
+          <p className="mt-1 text-sm sm:text-base text-gray-600">
+            Discover new connections
+          </p>
+        </header>
 
-        <div className="flex justify-center space-x-4">
-          <div className="relative w-full max-w-md">
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="relative flex-1 sm:max-w-xs">
             <input
               type="text"
-              placeholder="Search people by name or email"
+              placeholder="Search people..."
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
+              size={18}
             />
           </div>
           <div className="relative">
             <select
               value={filterOption}
               onChange={handleFilterChange}
-              className="appearance-none w-40 pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full sm:w-40 pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
             >
-              <option value="all">All Not Following</option>
+              <option value="all">All People</option>
               <option value="followers">With Followers</option>
             </select>
             <Filter
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={18}
             />
           </div>
         </div>
       </div>
 
+      {/* People List */}
       {filteredUsers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredUsers.map((user) => (
             <ProfileCard
               key={user.id}
@@ -161,7 +161,14 @@ const PeopleList = () => {
         </div>
       ) : (
         <div className="text-center text-gray-500 mt-12">
-          <p className="text-xl">No users found that you're not following</p>
+          <p className="text-lg sm:text-xl">
+            {searchTerm ? "No matching people found" : "No new people found"}
+          </p>
+          <p className="text-sm mt-2">
+            {searchTerm
+              ? "Try a different search term"
+              : "You might be following everyone already!"}
+          </p>
         </div>
       )}
     </div>

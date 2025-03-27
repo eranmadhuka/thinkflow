@@ -1,6 +1,7 @@
 package com.thinkflow.blog.controllers;
 
 import com.thinkflow.blog.models.*;
+import com.thinkflow.blog.repositories.PostRepository;
 import com.thinkflow.blog.repositories.UserRepository;
 import com.thinkflow.blog.services.PostService;
 import com.thinkflow.blog.services.CommentService;
@@ -35,6 +36,9 @@ public class PostController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PostRepository postRepository;
 
     /**
      * Create a new post
@@ -389,5 +393,102 @@ public class PostController {
 
         List<Post> followingPosts = postService.getFollowingPosts(principal.getName());
         return ResponseEntity.ok(followingPosts);
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(
+            @PathVariable String postId,
+            @AuthenticationPrincipal OAuth2User principal) {
+        try {
+            String googleId = principal.getAttribute("sub");
+
+            // Find user by Google ID
+            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            User user = userOptional.get();
+
+            // Get post from DB
+            Optional<Post> existingPost = postService.findById(postId);
+            if (existingPost.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Post post = existingPost.get();
+
+            // Check if the logged-in user is the post owner
+            if (!post.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            postService.deletePost(postId);
+            return ResponseEntity.ok().build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while deleting the post");
+        }
+    }
+
+    // Delete comment
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(
+            @PathVariable String commentId,
+            @AuthenticationPrincipal OAuth2User principal) {
+        try {
+            String googleId = principal.getAttribute("sub");
+            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            User user = userOptional.get();
+            Comment comment = commentService.findById(commentId)
+                    .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+            if (!comment.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            commentService.deleteComment(commentId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while deleting the comment");
+        }
+    }
+
+    // Update comment
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @PathVariable String commentId,
+            @RequestBody Comment commentUpdates,
+            @AuthenticationPrincipal OAuth2User principal) {
+        try {
+            String googleId = principal.getAttribute("sub");
+            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            User user = userOptional.get();
+            Comment existingComment = commentService.findById(commentId)
+                    .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+            if (!existingComment.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Comment updatedComment = commentService.updateComment(commentId, commentUpdates.getContent());
+            return ResponseEntity.ok(updatedComment);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while updating the comment");
+        }
     }
 }

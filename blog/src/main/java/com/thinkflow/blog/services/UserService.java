@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service class handling user-related business logic.
@@ -35,6 +36,43 @@ public class UserService {
      */
     public User saveUser(User user) {
         return userRepository.save(user);
+    }
+
+    /**
+     * Deletes a user account, their posts, and all associated references.
+     * @param userId ID of the user to delete
+     */
+    public void deleteUser(String userId) {
+        User user = getUserById(userId);
+
+        // Step 1: Delete all posts created by the user
+        postRepository.deleteByUserId(userId);
+
+        // Step 2: Clean up references in other users' data
+        List<User> allUsers = userRepository.findAll();
+        for (User otherUser : allUsers) {
+            // Remove from followers
+            if (otherUser.getFollowers().contains(userId)) {
+                otherUser.getFollowers().remove(userId);
+            }
+            // Remove from following
+            if (otherUser.getFollowing().contains(userId)) {
+                otherUser.getFollowing().remove(userId);
+            }
+            // Remove user's posts from other users' savedPosts
+            List<String> userPostIds = postRepository.findByUserId(userId).stream()
+                    .map(Post::getId)
+                    .collect(Collectors.toList());
+            for (String postId : userPostIds) {
+                if (otherUser.getSavedPosts().contains(postId)) {
+                    otherUser.getSavedPosts().remove(postId);
+                }
+            }
+            userRepository.save(otherUser);
+        }
+
+        // Step 3: Delete the user
+        userRepository.delete(user);
     }
 
     /**

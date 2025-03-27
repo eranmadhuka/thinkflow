@@ -7,6 +7,7 @@ import {
   MessageCircle,
   MoreHorizontal,
 } from "lucide-react";
+import UserImg from "../../assets/images/user.png";
 
 const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
   const [isFollowing, setIsFollowing] = useState(
@@ -30,22 +31,20 @@ const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
 
   return (
     <div
-      className="w-full max-w-md bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-100"
+      className="w-full bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 cursor-pointer"
       onClick={() => navigate(`/profile/${user.id}`)}
     >
       {/* Header Section */}
       <div className="flex items-center p-4 border-b border-gray-100">
         <img
-          className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 mr-3 transition-transform duration-200 hover:scale-105"
-          src={user.picture || "https://via.placeholder.com/150"}
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover border-2 border-gray-200 mr-3 transition-transform duration-200 hover:scale-105"
+          src={user.picture ? user.picture : UserImg}
           alt={`${user.name}'s profile`}
         />
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-gray-900 truncate">
-              {user.name}
-            </h3>
-          </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+            {user.name}
+          </h3>
           <p className="text-xs text-gray-500 truncate">{user.status}</p>
         </div>
       </div>
@@ -81,37 +80,38 @@ const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
 
         {/* Action Buttons */}
         {loggedInUser && loggedInUser.id !== user.id && (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleFollowToggle}
-              className={`flex-1 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${
+              className={`w-full py-2 text-sm font-medium rounded-full transition-colors duration-200 ${
                 isFollowing
                   ? "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700"
               }`}
             >
-              {isFollowing ? (
-                <span className="flex items-center justify-center">
-                  <UserMinus size={14} className="mr-1" />
-                  Unfollow
-                </span>
-              ) : (
-                <span className="flex items-center justify-center">
-                  <UserPlus size={14} className="mr-1" />
-                  Follow
-                </span>
-              )}
+              <span className="flex items-center justify-center gap-1">
+                {isFollowing ? (
+                  <>
+                    <UserMinus size={14} />
+                    Unfollow
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={14} />
+                    Follow
+                  </>
+                )}
+              </span>
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // Implement messaging functionality here
                 console.log(`Message ${user.name}`);
               }}
-              className="flex-1 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
+              className="w-full py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
             >
-              <span className="flex items-center justify-center">
-                <MessageCircle size={14} className="mr-1" />
+              <span className="flex items-center justify-center gap-1">
+                <MessageCircle size={14} />
                 Message
               </span>
             </button>

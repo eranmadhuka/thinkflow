@@ -2,6 +2,8 @@ package com.thinkflow.blog.services;
 
 import com.thinkflow.blog.models.Post;
 import com.thinkflow.blog.models.User;
+import com.thinkflow.blog.repositories.CommentRepository;
+import com.thinkflow.blog.repositories.LikeRepository;
 import com.thinkflow.blog.repositories.PostRepository;
 import com.thinkflow.blog.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,12 @@ public class UserService {
     private PostRepository postRepository;
 
     @Autowired
+    private LikeRepository likeRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
     private NotificationService notificationService;
 
     /**
@@ -39,30 +47,41 @@ public class UserService {
     }
 
     /**
-     * Deletes a user account, their posts, and all associated references.
+     * Deletes a user account, their posts, likes, comments, and all associated references.
      * @param userId ID of the user to delete
      */
     public void deleteUser(String userId) {
         User user = getUserById(userId);
 
-        // Step 1: Delete all posts created by the user
+        // Step 1: Fetch user's post IDs for cleanup
+        List<String> userPostIds = postRepository.findByUserId(userId).stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+
+        // Step 2: Delete all posts created by the user
         postRepository.deleteByUserId(userId);
 
-        // Step 2: Clean up references in other users' data
+        // Step 3: Delete all likes made by the user
+        likeRepository.deleteByUserId(userId);
+
+        // Step 4: Delete all likes on the user's posts
+        likeRepository.deleteByPostIdIn(userPostIds);
+
+        // Step 5: Delete all comments made by the user
+        commentRepository.deleteByUserId(userId);
+
+        // Step 6: Delete all comments on the user's posts
+        commentRepository.deleteByPostIdIn(userPostIds);
+
+        // Step 7: Clean up references in other users' data
         List<User> allUsers = userRepository.findAll();
         for (User otherUser : allUsers) {
-            // Remove from followers
             if (otherUser.getFollowers().contains(userId)) {
                 otherUser.getFollowers().remove(userId);
             }
-            // Remove from following
             if (otherUser.getFollowing().contains(userId)) {
                 otherUser.getFollowing().remove(userId);
             }
-            // Remove user's posts from other users' savedPosts
-            List<String> userPostIds = postRepository.findByUserId(userId).stream()
-                    .map(Post::getId)
-                    .collect(Collectors.toList());
             for (String postId : userPostIds) {
                 if (otherUser.getSavedPosts().contains(postId)) {
                     otherUser.getSavedPosts().remove(postId);
@@ -71,7 +90,7 @@ public class UserService {
             userRepository.save(otherUser);
         }
 
-        // Step 3: Delete the user
+        // Step 8: Delete the user
         userRepository.delete(user);
     }
 

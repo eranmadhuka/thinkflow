@@ -17,12 +17,16 @@ import java.util.Optional;
 public interface UserRepository extends MongoRepository<User, String> {
 
     /**
-     * Finds a user by their Google OAuth ID.
-     * @param googleId The Google ID of the user
+     * Finds a user by their OAuth provider ID.
+     * @param providerId The OAuth provider's unique identifier (e.g., Google "sub", Facebook "id")
      * @return Optional containing the user if found
      */
-    Optional<User> findByGoogleId(String googleId);
 
+    @Query("{ 'identities.providerId': ?0 }")
+    Optional<User> findByProviderId(String providerId); // Updated to query nested field
+
+
+    Optional<User> findByEmail(String email);
     /**
      * Finds users by a list of IDs.
      * @param ids List of user IDs
@@ -30,14 +34,13 @@ public interface UserRepository extends MongoRepository<User, String> {
      */
     List<User> findByIdIn(List<String> ids);
 
-
-
     /**
-     * Finds all users except the one with the specified Google ID.
-     * @param googleId Google ID to exclude
+     * Finds all users except the one with the specified provider ID.
+     * @param providerId Provider ID to exclude
      * @return List of users
      */
-    List<User> findByGoogleIdNot(String googleId);
+    @Query("{ 'identities.providerId': { $ne: ?0 } }")
+    List<User> findByProviderIdNot(String providerId);
 
     /**
      * Finds users not followed by the current user, excluding the current user.

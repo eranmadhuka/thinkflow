@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import MediaUpload from "./MediaUpload";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase/firebase";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const EditPost = () => {
   const { user } = useContext(AuthContext);
@@ -16,8 +17,6 @@ const EditPost = () => {
   const [existingMediaUrls, setExistingMediaUrls] = useState([]);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Fetch post details when component mounts
   useEffect(() => {
@@ -30,18 +29,17 @@ const EditPost = () => {
 
         const post = response.data;
 
-        // Ensure the logged-in user is the post author
-        if (post.userId !== user._id) {
-          setError("You are not authorized to edit this post.");
-          return;
-        }
-
         setTitle(post.title);
         setContent(post.content);
         setExistingMediaUrls(post.mediaUrls || []);
       } catch (error) {
         console.error("Failed to fetch post details:", error);
-        setError("Failed to load post details. Please try again.");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to load post details. Please try again.",
+          confirmButtonColor: "#4f46e5",
+        });
       }
     };
 
@@ -50,11 +48,14 @@ const EditPost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMessage("");
 
     if (!title || !content) {
-      setError("Please fill in all required fields.");
+      Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: "Please fill in all required fields.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
@@ -72,19 +73,34 @@ const EditPost = () => {
         existingMediaUrls.filter((url) => url.includes("image")).length >
       3
     ) {
-      setError("You can upload up to 3 images.");
+      Swal.fire({
+        icon: "error",
+        title: "Too Many Images",
+        text: "You can upload up to 3 images.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
     if (videoFiles.length > 1) {
-      setError("You can upload only 1 video.");
+      Swal.fire({
+        icon: "error",
+        title: "Too Many Videos",
+        text: "You can upload only 1 video.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
     // Check video size (rough estimate for 30 seconds)
     for (const file of videoFiles) {
       if (file.size > 30 * 1024 * 1024) {
-        setError("Video must be less than 30 seconds (max 30MB).");
+        Swal.fire({
+          icon: "error",
+          title: "Video Too Large",
+          text: "Video must be less than 30 seconds (max 30MB).",
+          confirmButtonColor: "#4f46e5",
+        });
         return;
       }
     }
@@ -107,7 +123,7 @@ const EditPost = () => {
       // Combine existing and new media URLs
       const mediaUrls = [...existingMediaUrls, ...newMediaUrls];
       const fileTypes = [
-        ...existingMediaUrls.map(() => "image"),
+        ...existingMediaUrls.map(() => "image"), // Assuming existing are images; adjust if needed
         ...newFileTypes,
       ];
 
@@ -131,15 +147,22 @@ const EditPost = () => {
         }
       );
 
-      setSuccessMessage("Blog post updated successfully!");
-
-      // Redirect to post detail page after a short delay
-      setTimeout(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Blog post updated successfully!",
+        confirmButtonColor: "#4f46e5",
+      }).then(() => {
         navigate(`/posts/${postId}`);
-      }, 1500);
+      });
     } catch (error) {
       console.error("Failed to update blog post:", error);
-      setError("Failed to update blog post. Please try again.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to update blog post. Please try again.",
+        confirmButtonColor: "#4f46e5",
+      });
     } finally {
       setLoading(false);
     }
@@ -177,29 +200,13 @@ const EditPost = () => {
   };
 
   // If there's an error loading the post, show error message
-  if (error && !title) {
-    return (
-      <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
+  if (!title && !content && !existingMediaUrls.length) {
+    return null; // SweetAlert2 will handle the error display
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold mb-6">Edit Blog Post</h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-          {successMessage}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -214,7 +221,7 @@ const EditPost = () => {
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" // Changed to indigo-500
             required
           />
         </div>
@@ -231,7 +238,7 @@ const EditPost = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows="8"
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" // Changed to indigo-500
             required
           />
         </div>
@@ -255,7 +262,7 @@ const EditPost = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-3 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-emerald-300 font-medium"
+          className="w-full px-4 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 font-medium" // Changed to indigo-600
         >
           {loading ? (
             <span className="flex items-center justify-center">

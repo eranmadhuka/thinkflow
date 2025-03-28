@@ -33,14 +33,14 @@ public class UserController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email
     ) {
-        String currentUserGoogleId = principal != null ? principal.getAttribute("sub") : null;
+        String currentUserGoogleId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
 
         if (currentUserGoogleId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         // Get all users except the current user
-        List<User> users = userRepository.findByGoogleIdNot(currentUserGoogleId);
+        List<User> users = userRepository.findByProviderIdNot(currentUserGoogleId);
 
         // Apply optional filtering by name and email
         if (name != null) {
@@ -61,8 +61,8 @@ public class UserController {
     // Get logged-in user's profile
     @GetMapping("/profile")
     public ResponseEntity<User> getLoggedInUserProfile(@AuthenticationPrincipal OAuth2User principal) {
-        String googleId = principal.getAttribute("sub");
-        User user = userRepository.findByGoogleId(googleId)
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(user);
     }
@@ -77,8 +77,8 @@ public class UserController {
     // Update logged-in user's profile
     @PutMapping("/profile")
     public ResponseEntity<User> updateProfile(@RequestBody User updatedUser, @AuthenticationPrincipal OAuth2User principal) {
-        String googleId = principal.getAttribute("sub");
-        User user = userRepository.findByGoogleId(googleId)
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Update user details
@@ -102,8 +102,8 @@ public class UserController {
     public ResponseEntity<String> deleteAccount(
             @PathVariable String userId,
             @AuthenticationPrincipal OAuth2User principal) {
-        String googleId = principal.getAttribute("sub");
-        User currentUser = userRepository.findByGoogleId(googleId)
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User currentUser = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!currentUser.getId().equals(userId)) {
@@ -128,8 +128,8 @@ public class UserController {
             @AuthenticationPrincipal OAuth2User principal
     ) {
         // Ensure the logged-in user can only update their own profile
-        String googleId = principal.getAttribute("sub");
-        User user = userRepository.findByGoogleId(googleId)
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!user.getId().equals(id)) {
@@ -235,8 +235,8 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        String googleId = principal.getAttribute("sub");
-        User currentUser = userRepository.findByGoogleId(googleId)
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User currentUser = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Page<User> result = userService.getUsersNotFollowing(currentUser.getId(), page, size);

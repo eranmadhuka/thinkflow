@@ -89,14 +89,14 @@ const ProfilePage = () => {
 
   const handleDeleteAccount = async () => {
     const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "This action will permanently delete your account and all associated data. This cannot be undone!",
+      title: "Are you sure? 😢",
+      html: "This will permanently delete your account and all your data. <br><strong>Please think again!</strong> This can’t be undone!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, keep my account",
+      confirmButtonColor: "#d33", // Red for delete
+      cancelButtonColor: "#4f46e5", // Indigo-600 to match your theme
+      confirmButtonText: "Yes, delete it anyway 😔",
+      cancelButtonText: "No, I’ll stay! 🥹",
     });
 
     if (result.isConfirmed) {
@@ -105,10 +105,10 @@ const ProfilePage = () => {
           withCredentials: true,
         });
         Swal.fire({
-          title: "Deleted!",
-          text: "Your account has been successfully deleted.",
+          title: "Goodbye! 😢",
+          text: "Your account has been deleted. We’re sad to see you go!",
           icon: "success",
-          timer: 2000,
+          timer: 2500, // Slightly longer to let the message sink in
           showConfirmButton: false,
         }).then(() => {
           window.location.href = "http://localhost:5173/login";
@@ -116,9 +116,10 @@ const ProfilePage = () => {
       } catch (error) {
         console.error("Failed to delete account:", error);
         Swal.fire({
-          title: "Error!",
+          title: "Oops! 😓",
           text: "Failed to delete your account. Please try again.",
           icon: "error",
+          confirmButtonColor: "#4f46e5", // Match your indigo-600 theme
         });
       }
     }

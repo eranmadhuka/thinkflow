@@ -49,8 +49,10 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody Post post, @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String userId = principal.getAttribute("sub");
-            Post savedPost = postService.createPost(post, userId);
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Post savedPost = postService.createPost(post, user.getId()); // Use _id
             return ResponseEntity.ok(savedPost);
         } catch (Exception e) {
             e.printStackTrace();
@@ -58,40 +60,35 @@ public class PostController {
         }
     }
 
-    // Update post
+    /**
+     * Update an existing post
+     * @param postId ID of the post to update
+     * @param postUpdates Updated post data
+     * @param principal Authenticated user information
+     * @return Updated post with HTTP status
+     */
     @PutMapping("/{postId}")
     public ResponseEntity<Post> updatePost(
             @PathVariable String postId,
             @RequestBody Post postUpdates,
             @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String googleId = principal.getAttribute("sub"); // Get Google ID from OAuth
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Find user by Google ID
-            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            User user = userOptional.get(); // Logged-in user from DB
-
-            // Get post from DB
             Optional<Post> existingPost = postService.findById(postId);
             if (existingPost.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
             Post post = existingPost.get();
-
-            // Check if the logged-in user is the post owner (MongoDB ObjectId comparison)
-            if (!post.getUser().getId().equals(user.getId())) {
+            if (!post.getUser().getId().equals(user.getId())) { // Compare _id
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Update post
             Post updatedPost = postService.updatePost(postId, postUpdates);
             return ResponseEntity.ok(updatedPost);
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -99,14 +96,14 @@ public class PostController {
     }
 
     /**
-     * Fetch posts by user ID
-     * @param userId ID of the user whose posts to fetch
+     * Fetch posts by user ID (MongoDB ObjectId)
+     * @param userId MongoDB ObjectId of the user whose posts to fetch
      * @return List of posts with HTTP status
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getPostsByUserId(@PathVariable String userId) {
         try {
-            List<Post> posts = postService.getPostsByUserId(userId);
+            List<Post> posts = postService.getPostsByUserId(userId); // userId is _id
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,12 +152,10 @@ public class PostController {
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> likePost(@PathVariable String postId, @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-            }
-
-            return ResponseEntity.ok(postService.togglePostLike(postId, userId));
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            return ResponseEntity.ok(postService.togglePostLike(postId, user.getId())); // Use _id
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the like");
@@ -178,15 +173,12 @@ public class PostController {
     public ResponseEntity<?> addComment(
             @PathVariable String postId,
             @RequestBody Comment comment,
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
+            @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-            }
-
-            Comment savedComment = commentService.addComment(postId, comment, userId);
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Comment savedComment = commentService.addComment(postId, comment, user.getId()); // Use _id
             return ResponseEntity.ok(savedComment);
         } catch (Exception e) {
             e.printStackTrace();
@@ -251,19 +243,15 @@ public class PostController {
     @GetMapping("/{postId}/has-liked")
     public ResponseEntity<?> hasUserLikedPost(
             @PathVariable String postId,
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
+            @AuthenticationPrincipal OAuth2User principal) {
         try {
             if (principal == null) {
                 return ResponseEntity.ok(false);
             }
-
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.ok(false);
-            }
-
-            boolean hasLiked = postService.hasUserLikedPost(postId, userId);
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            boolean hasLiked = postService.hasUserLikedPost(postId, user.getId()); // Use _id
             return ResponseEntity.ok(hasLiked);
         } catch (Exception e) {
             e.printStackTrace();
@@ -280,12 +268,10 @@ public class PostController {
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<?> likeComment(@PathVariable String commentId, @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-            }
-
-            return ResponseEntity.ok(commentService.toggleCommentLike(commentId, userId));
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            return ResponseEntity.ok(commentService.toggleCommentLike(commentId, user.getId())); // Use _id
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the comment like");
@@ -303,15 +289,12 @@ public class PostController {
     public ResponseEntity<?> addReply(
             @PathVariable String commentId,
             @RequestBody Reply reply,
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
+            @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-            }
-
-            Reply savedReply = commentService.addReply(commentId, reply, userId);
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Reply savedReply = commentService.addReply(commentId, reply, user.getId()); // Use _id
             return ResponseEntity.ok(savedReply);
         } catch (Exception e) {
             e.printStackTrace();
@@ -344,19 +327,15 @@ public class PostController {
     @GetMapping("/comments/{commentId}/has-liked")
     public ResponseEntity<?> hasUserLikedComment(
             @PathVariable String commentId,
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
+            @AuthenticationPrincipal OAuth2User principal) {
         try {
             if (principal == null) {
                 return ResponseEntity.ok(false);
             }
-
-            String userId = principal.getAttribute("sub");
-            if (userId == null) {
-                return ResponseEntity.ok(false);
-            }
-
-            boolean hasLiked = commentService.hasUserLikedComment(commentId, userId);
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            boolean hasLiked = commentService.hasUserLikedComment(commentId, user.getId()); // Use _id
             return ResponseEntity.ok(hasLiked);
         } catch (Exception e) {
             e.printStackTrace();
@@ -386,46 +365,44 @@ public class PostController {
      * @return List of posts with HTTP status
      */
     @GetMapping("/following")
-    public ResponseEntity<List<Post>> getFollowingPosts(Principal principal) {
+    public ResponseEntity<List<Post>> getFollowingPosts(@AuthenticationPrincipal OAuth2User principal) {
         if (principal == null) {
             throw new RuntimeException("User not authenticated");
         }
-
-        List<Post> followingPosts = postService.getFollowingPosts(principal.getName());
+        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        User user = userRepository.findByProviderId(providerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<Post> followingPosts = postService.getFollowingPosts(user.getId()); // Use _id
         return ResponseEntity.ok(followingPosts);
     }
 
+    /**
+     * Delete a post
+     * @param postId ID of the post to delete
+     * @param principal Authenticated user information
+     * @return HTTP status
+     */
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(
             @PathVariable String postId,
             @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String googleId = principal.getAttribute("sub");
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Find user by Google ID
-            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            User user = userOptional.get();
-
-            // Get post from DB
             Optional<Post> existingPost = postService.findById(postId);
             if (existingPost.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
             Post post = existingPost.get();
-
-            // Check if the logged-in user is the post owner
-            if (!post.getUser().getId().equals(user.getId())) {
+            if (!post.getUser().getId().equals(user.getId())) { // Compare _id
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             postService.deletePost(postId);
             return ResponseEntity.ok().build();
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -433,23 +410,25 @@ public class PostController {
         }
     }
 
-    // Delete comment
+    /**
+     * Delete a comment
+     * @param commentId ID of the comment to delete
+     * @param principal Authenticated user information
+     * @return HTTP status
+     */
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<?> deleteComment(
             @PathVariable String commentId,
             @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String googleId = principal.getAttribute("sub");
-            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            User user = userOptional.get();
             Comment comment = commentService.findById(commentId)
                     .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-            if (!comment.getUser().getId().equals(user.getId())) {
+            if (!comment.getUser().getId().equals(user.getId())) { // Compare _id
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -462,24 +441,27 @@ public class PostController {
         }
     }
 
-    // Update comment
+    /**
+     * Update a comment
+     * @param commentId ID of the comment to update
+     * @param commentUpdates Updated comment data
+     * @param principal Authenticated user information
+     * @return Updated comment with HTTP status
+     */
     @PutMapping("/comments/{commentId}")
     public ResponseEntity<?> updateComment(
             @PathVariable String commentId,
             @RequestBody Comment commentUpdates,
             @AuthenticationPrincipal OAuth2User principal) {
         try {
-            String googleId = principal.getAttribute("sub");
-            Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+            String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+            User user = userRepository.findByProviderId(providerId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            User user = userOptional.get();
             Comment existingComment = commentService.findById(commentId)
                     .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-            if (!existingComment.getUser().getId().equals(user.getId())) {
+            if (!existingComment.getUser().getId().equals(user.getId())) { // Compare _id
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 

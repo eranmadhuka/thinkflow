@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase/firebase";
 import UserImg from "../../assets/images/user.png";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const UpdateProfile = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -14,10 +15,9 @@ const UpdateProfile = () => {
   const [status, setStatus] = useState(user?.status || "");
   const [profilePicture, setProfilePicture] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [previewImage, setPreviewImage] = useState(user?.picture || "");
+  const [previewImage, setPreviewImage] = useState(user?.picture || UserImg);
   const navigate = useNavigate();
 
-  // Status options with emojis
   const statusOptions = [
     { value: "", label: "Select Status", emoji: "🤔" },
     { value: "Single", label: "Single", emoji: "💔" },
@@ -42,14 +42,12 @@ const UpdateProfile = () => {
     try {
       let pictureUrl = user?.picture || "";
 
-      // Upload new profile picture to Firebase if selected
       if (profilePicture) {
         const storageRef = ref(storage, `images/profile-pictures/${user.id}`);
         await uploadBytes(storageRef, profilePicture);
         pictureUrl = await getDownloadURL(storageRef);
       }
 
-      // Update user profile in the backend
       const updatedUser = {
         name,
         bio,
@@ -63,13 +61,25 @@ const UpdateProfile = () => {
         { withCredentials: true }
       );
 
-      // Update user in the AuthContext
       setUser(response.data);
-      alert("Profile updated successfully!");
-      navigate(`/profile/${user.id}`);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Profile updated successfully!",
+        confirmButtonColor: "#4f46e5",
+        background: "#f9fafb",
+        timer: 2000,
+      }).then(() => {
+        navigate(`/profile/${user.id}`);
+      });
     } catch (error) {
       console.error("Failed to update profile:", error);
-      alert("Failed to update profile. Please try again.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to update profile. Please try again.",
+        confirmButtonColor: "#4f46e5",
+      });
     } finally {
       setLoading(false);
     }
@@ -77,7 +87,6 @@ const UpdateProfile = () => {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-0">
-      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <header>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
@@ -89,20 +98,17 @@ const UpdateProfile = () => {
         </header>
       </div>
 
-      {/* Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden"
       >
-        {/* Cover Photo */}
         <div className="relative h-32 sm:h-40 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
 
-        {/* Profile Picture */}
         <div className="flex flex-col items-center -mt-16 sm:-mt-20 px-4">
           <div className="relative">
             <img
-              src={user.picture ? user.picture : UserImg}
-              alt="Profile"
+              src={previewImage}
+              alt="Profile Preview"
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-sm"
             />
             <label
@@ -121,9 +127,19 @@ const UpdateProfile = () => {
           </div>
         </div>
 
-        {/* Form Fields */}
         <div className="px-4 sm:px-6 py-6 space-y-6">
-          {/* Name Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={user?.email || ""}
+              disabled
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Name
@@ -137,7 +153,6 @@ const UpdateProfile = () => {
             />
           </div>
 
-          {/* Bio Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Bio
@@ -151,7 +166,6 @@ const UpdateProfile = () => {
             />
           </div>
 
-          {/* Status Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Relationship Status
@@ -169,7 +183,6 @@ const UpdateProfile = () => {
             </select>
           </div>
 
-          {/* Submit Button */}
           <div className="mt-6">
             <button
               type="submit"

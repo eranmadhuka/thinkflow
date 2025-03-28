@@ -81,7 +81,7 @@ const MediaUpload = ({ onFilesSelected }) => {
             <div
               key={index}
               className={`border-2 border-dashed rounded-lg p-2 flex flex-col items-center justify-center h-40 ${
-                index === 0 ? "border-emerald-500" : "border-gray-300"
+                index === 0 ? "border-indigo-500" : "border-gray-300"
               }`}
             >
               {image ? (
@@ -99,7 +99,7 @@ const MediaUpload = ({ onFilesSelected }) => {
                     ×
                   </button>
                   {index === 0 && (
-                    <span className="absolute bottom-1 left-1 bg-emerald-500 text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute bottom-1 left-1 bg-indigo-500 text-white text-xs px-2 py-1 rounded">
                       Thumbnail
                     </span>
                   )}

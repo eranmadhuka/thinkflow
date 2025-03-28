@@ -55,7 +55,7 @@ const Header = ({ onMenuToggle }) => {
                 {/* Notifications */}
                 <div className="relative">
                   <button
-                    className="p-2 text-gray-600 hover:text-emerald-600 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
+                    className="p-2 text-gray-600 hover:text-indigo-600 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
                     onClick={() =>
                       setNotificationDropdownOpen(!notificationDropdownOpen)
                     }
@@ -80,7 +80,7 @@ const Header = ({ onMenuToggle }) => {
                           </h3>
                           <button
                             onClick={markAllAsRead}
-                            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+                            className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                           >
                             Mark all as read
                           </button>
@@ -93,7 +93,7 @@ const Header = ({ onMenuToggle }) => {
                                 className={`px-4 py-3 text-sm flex justify-between items-center ${
                                   notif.read
                                     ? "text-gray-500"
-                                    : "text-gray-700 bg-emerald-50/50"
+                                    : "text-gray-700 bg-indigo-50/50"
                                 } hover:bg-gray-50 transition-colors duration-150`}
                               >
                                 <span className="line-clamp-2">
@@ -102,7 +102,7 @@ const Header = ({ onMenuToggle }) => {
                                 {!notif.read && (
                                   <button
                                     onClick={() => markAsRead(index)}
-                                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200"
+                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                                   >
                                     Mark as read
                                   </button>
@@ -117,7 +117,7 @@ const Header = ({ onMenuToggle }) => {
                         )}
                         <Link
                           to="/notifications"
-                          className="block px-4 py-2 text-sm text-emerald-600 font-medium hover:bg-gray-50 transition-colors duration-200"
+                          className="block px-4 py-2 text-sm text-indigo-600 font-medium hover:bg-gray-50 transition-colors duration-200"
                           onClick={() => setNotificationDropdownOpen(false)}
                         >
                           View all notifications
@@ -151,14 +151,14 @@ const Header = ({ onMenuToggle }) => {
                       <div className="absolute right-0 z-20 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 transform transition-all duration-200 ease-in-out origin-top-right scale-95 opacity-0 animate-dropdown">
                         <Link
                           to={`/profile/${user.id}`}
-                          className="block px-4 py-2 text-sm text-gray-700 font-medium hover:bg-gray-50 hover:text-emerald-600 transition-colors duration-200"
+                          className="block px-4 py-2 text-sm text-gray-700 font-medium hover:bg-gray-50 hover:text-indigo-600 transition-colors duration-200"
                           onClick={() => setDropdownOpen(false)}
                         >
                           Profile
                         </Link>
                         <Link
                           to="/update-profile"
-                          className="block px-4 py-2 text-sm text-gray-700 font-medium hover:bg-gray-50 hover:text-emerald-600 transition-colors duration-200"
+                          className="block px-4 py-2 text-sm text-gray-700 font-medium hover:bg-gray-50 hover:text-indigo-600 transition-colors duration-200"
                           onClick={() => setDropdownOpen(false)}
                         >
                           Settings
@@ -178,13 +178,13 @@ const Header = ({ onMenuToggle }) => {
               <div className="flex items-center gap-2 sm:gap-4">
                 <Link
                   to="/login"
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors duration-200"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors duration-200"
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition-colors duration-200"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors duration-200"
                 >
                   Get started
                 </Link>

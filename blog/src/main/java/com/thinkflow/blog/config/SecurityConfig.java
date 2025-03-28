@@ -1,5 +1,7 @@
 package com.thinkflow.blog.config;
 
+import com.thinkflow.blog.services.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,22 +22,29 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private AuthService authService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs and WebSocket
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/profile", "/logout", "/login", "/error", "/ws/**").permitAll() // Allow WebSocket endpoint
+                        .requestMatchers("/user/profile", "/logout", "/login", "/error", "/ws/**").permitAll() // Public endpoints
                         .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(authService) // Use AuthService
+                        )
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
                                     : "http://localhost:5173/feed";
                             response.sendRedirect(redirectUrl);
                         })
+                        .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -43,6 +52,7 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .addLogoutHandler(logoutHandler())
+                        .logoutSuccessUrl("http://localhost:5173/login")
                         .permitAll()
                 );
 
@@ -57,14 +67,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Allow React frontend
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow all HTTP methods
-        configuration.setAllowedHeaders(List.of("*")); // Allow all headers
-        configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // React frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // HTTP methods
+        configuration.setAllowedHeaders(List.of("*")); // All headers
+        configuration.setAllowCredentials(true); // Allow cookies
         configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply CORS to all endpoints, including /ws/**
+        source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
         return source;
     }
 }

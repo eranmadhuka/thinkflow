@@ -1,56 +1,87 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaGithub, FaFacebook } from "react-icons/fa";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Register = () => {
+  const { user, loading, login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const origin = location.state?.from?.pathname || "/feed";
+      navigate(origin, { replace: true });
+    }
+  }, [user, navigate, location]);
+
+  const handleOAuthLogin = (provider) => {
+    setIsLoading(true);
+    login(provider);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">
+            Creating your account, please wait...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
-          {/* Heading */}
           <h1 className="font-abril text-3xl text-center text-gray-900 mb-6">
-            Create your account
+            Create Your Account
           </h1>
 
-          {/* Social Login Buttons */}
           <div className="space-y-4">
-            {/* Google Login Button */}
-            <button className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-              <FcGoogle className="w-6 h-6" />
-              <span className="font-jost">Sign up with Google</span>
+            <button
+              className="w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 transition-colors duration-200 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={() => handleOAuthLogin("google")}
+            >
+              <FcGoogle className="w-6 h-6 me-2" />
+              Sign in with Google
             </button>
-
-            {/* Facebook Login Button */}
-            <button className="w-full flex items-center justify-center space-x-3 bg-blue-600 rounded-md py-2 px-4 text-white hover:bg-blue-700 transition-colors duration-200">
-              <FaFacebook className="w-6 h-6" />
-              <span className="font-jost">Sign up with Facebook</span>
+            <button
+              className="w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 bg-blue-600 text-white opacity-60 cursor-not-allowed"
+              disabled
+            >
+              <FaFacebook className="w-6 h-6 me-2" />
+              Sign in with Facebook
             </button>
           </div>
 
-          {/* Login Link */}
-          <p className="text-center text-gray-600 font-jost mt-6">
-            Already have an account?{" "}
-            <Link to="/login" className="text-emerald-700 hover:underline">
-              Sign in
-            </Link>
-          </p>
+          <div className="text-center space-y-4 mt-6">
+            <p className="text-center text-gray-600 font-jost mt-6">
+              Already have an account?{" "}
+              <Link to="/login" className="text-emerald-700 hover:underline">
+                Sign in
+              </Link>
+            </p>
 
-          {/* Terms of Service and Privacy Policy Paragraph */}
-          <p className="text-center text-xs text-gray-500 font-jost mt-6">
-            By creating an account, you agree to Medium’s{" "}
-            <a href="#" className="text-emerald-700 hover:underline">
-              Terms of Service
-            </a>{" "}
-            and acknowledge that Medium’s{" "}
-            <a href="#" className="text-emerald-700 hover:underline">
-              Privacy Policy
-            </a>{" "}
-            applies to you.
-          </p>
+            <p className="text-xs text-gray-500 font-jost">
+              By signing in, you agree to our{" "}
+              <Link to="/terms" className="text-indigo-700 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-indigo-700 hover:underline">
+                Privacy Policy
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
       <Footer />

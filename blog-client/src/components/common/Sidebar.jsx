@@ -87,7 +87,7 @@ const Sidebar = () => {
             className="absolute w-full flex justify-center"
             style={{ top: "50%" }}
           >
-            <div className="w-16 h-16 rounded-full border-3 border-white overflow-hidden  flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full border-3 border-white overflow-hidden  flex items-center justify-center">
               <img
                 src={user.picture ? user.picture : UserImg}
                 alt="User Avatar"
@@ -96,7 +96,7 @@ const Sidebar = () => {
             </div>
           </div>
         </div>
-        <div className="mt-10">
+        <div className="mt-12">
           <h2 className="font-bold text-lg">{user.name}</h2>
           <p className="text-sm text-gray-600">{user.email}</p>
           <p className="text-xs mt-2 text-gray-500 italic">{user.bio}</p>

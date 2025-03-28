@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { ThumbsUp, MessageCircle, Edit, Trash2 } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
-import { FollowButton } from "../ui/FollowButton";
+import UserImg from "../../assets/images/user.png";
 
 const PostDetail = () => {
   const { postId } = useParams();
@@ -334,7 +334,7 @@ const PostDetail = () => {
             <div className="flex items-center space-x-4">
               <Link to={`/profile/${post.user?.id}`}>
                 <img
-                  src={post.user?.picture || "https://via.placeholder.com/48"}
+                  src={post.user?.picture ? post.user?.picture : UserImg}
                   alt={post.user?.name || "User"}
                   className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-300 hover:ring-blue-400 transition-all duration-200"
                 />
@@ -425,7 +425,7 @@ const PostDetail = () => {
             {/* Comment Input */}
             <div className="flex space-x-3 mb-6 sm:mb-8">
               <img
-                src={user?.picture || "https://via.placeholder.com/40"}
+                src={user?.picture ? user?.picture : UserImg}
                 alt="Profile"
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-gray-300 flex-shrink-0"
               />
@@ -749,8 +749,7 @@ const PostDetail = () => {
                       <Link to={`/profile/${like.user?.id}`}>
                         <img
                           src={
-                            like.user?.picture ||
-                            "https://via.placeholder.com/40"
+                            like.user?.picture ? like.user?.picture : UserImg
                           }
                           alt={like.user?.name}
                           className="w-10 h-10 rounded-full ring-2 ring-gray-300 object-cover"

@@ -44,12 +44,12 @@ public class PostService {
     /**
      * Creates a new post for the authenticated user.
      * @param post Post data from the request
-     * @param googleId Google ID of the authenticated user
+     * @param userId MongoDB ObjectId of the authenticated user
      * @return Created post
      */
-    public Post createPost(Post post, String googleId) {
-        User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
+    public Post createPost(Post post, String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         post.setUser(user);
         post.setCreatedAt(new Date());
@@ -77,7 +77,7 @@ public class PostService {
 
     /**
      * Retrieves all posts created by a specific user.
-     * @param userId ID of the user whose posts to fetch
+     * @param userId MongoDB ObjectId of the user whose posts to fetch
      * @return List of posts
      */
     public List<Post> getPostsByUserId(String userId) {
@@ -104,12 +104,12 @@ public class PostService {
     /**
      * Toggles like status for a post by the authenticated user.
      * @param postId ID of the post to like/unlike
-     * @param googleId Google ID of the authenticated user
+     * @param userId MongoDB ObjectId of the authenticated user
      * @return LikeResponse with updated like count and status
      */
-    public LikeResponse togglePostLike(String postId, String googleId) {
-        User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
+    public LikeResponse togglePostLike(String postId, String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found with ID: " + postId));
 
@@ -154,23 +154,23 @@ public class PostService {
     /**
      * Checks if a user has liked a post.
      * @param postId ID of the post to check
-     * @param googleId Google ID of the user
+     * @param userId MongoDB ObjectId of the user
      * @return True if the user has liked the post, false otherwise
      */
-    public boolean hasUserLikedPost(String postId, String googleId) {
-        Optional<User> userOptional = userRepository.findByGoogleId(googleId);
+    public boolean hasUserLikedPost(String postId, String userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
         return userOptional.isPresent() &&
                 likeRepository.findByPostIdAndUserId(postId, userOptional.get().getId()).isPresent();
     }
 
     /**
      * Retrieves posts from users the authenticated user is following.
-     * @param googleId Google ID of the authenticated user
+     * @param userId MongoDB ObjectId of the authenticated user
      * @return List of posts from followed users
      */
-    public List<Post> getFollowingPosts(String googleId) {
-        User user = userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new RuntimeException("User not found with Google ID: " + googleId));
+    public List<Post> getFollowingPosts(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         List<String> followingUserIds = user.getFollowing();
         if (followingUserIds.isEmpty()) {
@@ -181,6 +181,10 @@ public class PostService {
         return postRepository.findByUserIn(followingUsers);
     }
 
+    /**
+     * Deletes a post.
+     * @param postId ID of the post to delete
+     */
     public void deletePost(String postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));

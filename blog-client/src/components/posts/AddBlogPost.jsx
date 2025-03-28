@@ -4,6 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import MediaUpload from "./MediaUpload";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase/firebase";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const AddBlogPost = () => {
   const { user } = useAuth();
@@ -11,16 +13,18 @@ const AddBlogPost = () => {
   const [content, setContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMessage("");
 
     if (!title || !content) {
-      setError("Please fill in all required fields.");
+      Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: "Please fill in all required fields.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
@@ -34,19 +38,34 @@ const AddBlogPost = () => {
 
     // Validation
     if (imageFiles.length > 3) {
-      setError("You can upload up to 3 images.");
+      Swal.fire({
+        icon: "error",
+        title: "Too Many Images",
+        text: "You can upload up to 3 images.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
     if (videoFiles.length > 1) {
-      setError("You can upload only 1 video.");
+      Swal.fire({
+        icon: "error",
+        title: "Too Many Videos",
+        text: "You can upload only 1 video.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
     // Check video size (rough estimate for 30 seconds)
     for (const file of videoFiles) {
       if (file.size > 30 * 1024 * 1024) {
-        setError("Video must be less than 30 seconds (max 30MB).");
+        Swal.fire({
+          icon: "error",
+          title: "Video Too Large",
+          text: "Video must be less than 30 seconds (max 30MB).",
+          confirmButtonColor: "#4f46e5",
+        });
         return;
       }
     }
@@ -90,10 +109,22 @@ const AddBlogPost = () => {
       setTitle("");
       setContent("");
       setMediaFiles([]);
-      setSuccessMessage("Blog post created successfully!");
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Blog post created successfully!",
+        confirmButtonColor: "#4f46e5",
+      }).then(() => {
+        navigate(`/profile/${user.id}`);
+      });
     } catch (error) {
       console.error("Failed to create blog post:", error);
-      setError("Failed to create blog post. Please try again.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to create blog post. Please try again.",
+        confirmButtonColor: "#4f46e5",
+      });
     } finally {
       setLoading(false);
     }
@@ -102,18 +133,6 @@ const AddBlogPost = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl bg-white shadow-lg">
       <h2 className="text-2xl font-bold mb-6">Create a New Blog Post</h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-          {successMessage}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -128,7 +147,7 @@ const AddBlogPost = () => {
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
@@ -145,7 +164,7 @@ const AddBlogPost = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows="8"
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
         </div>
@@ -160,7 +179,7 @@ const AddBlogPost = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-3 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-emerald-300 font-medium"
+          className="w-full px-4 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 font-medium"
         >
           {loading ? (
             <span className="flex items-center justify-center">

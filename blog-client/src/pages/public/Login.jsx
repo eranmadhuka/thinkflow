@@ -13,9 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Redirect if user is already authenticated
     if (user) {
-      // Use the stored redirect path or default to feed
       const origin = location.state?.from?.pathname || "/feed";
       navigate(origin, { replace: true });
     }
@@ -23,21 +21,14 @@ const Login = () => {
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);
-    try {
-      // Use the centralized login method from AuthContext
-      login(provider);
-    } catch (error) {
-      console.error("Login failed:", error);
-      setIsLoading(false);
-    }
+    login(provider);
   };
 
-  // Loading state component
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-lg text-gray-600">
             Authenticating, please wait...
           </p>
@@ -56,61 +47,37 @@ const Login = () => {
           </h1>
 
           <div className="space-y-4">
-            {/* OAuth Login Buttons */}
-            {[
-              {
-                provider: "google",
-                Icon: FcGoogle,
-                text: "Sign in with Google",
-                className:
-                  "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
-              },
-              {
-                provider: "github",
-                Icon: FaGithub,
-                text: "Sign in with GitHub",
-                className: "bg-gray-800 text-white hover:bg-gray-700",
-              },
-              {
-                provider: "facebook",
-                Icon: FaFacebook,
-                text: "Sign in with Facebook",
-                className: "bg-blue-600 text-white hover:bg-blue-700",
-              },
-            ].map(({ provider, Icon, text, className }) => (
-              <button
-                key={provider}
-                onClick={() => handleOAuthLogin(provider)}
-                className={`w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 transition-colors duration-200 ${className}`}
-                disabled={isLoading}
-              >
-                <Icon className="w-6 h-6" />
-                <span className="font-jost">{text}</span>
-              </button>
-            ))}
+            <button
+              className="w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 transition-colors duration-200 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={() => handleOAuthLogin("google")}
+            >
+              <FcGoogle className="w-6 h-6 me-2" />
+              Sign in with Google
+            </button>
+            <button
+              className="w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 bg-blue-600 text-white opacity-60 cursor-not-allowed"
+              disabled
+            >
+              <FaFacebook className="w-6 h-6 me-2" />
+              Sign in with Facebook
+            </button>
           </div>
 
-          <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="mx-4 text-gray-500 font-jost">or</span>
-            <div className="flex-1 border-t border-gray-300"></div>
-          </div>
-
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4 mt-6">
             <p className="text-gray-600 font-jost">
               Don't have an account?{" "}
-              <Link to="/register" className="text-emerald-700 hover:underline">
+              <Link to="/register" className="text-indigo-700 hover:underline">
                 Create one
               </Link>
             </p>
 
             <p className="text-xs text-gray-500 font-jost">
               By signing in, you agree to our{" "}
-              <Link to="/terms" className="text-emerald-700 hover:underline">
+              <Link to="/terms" className="text-indigo-700 hover:underline">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" className="text-emerald-700 hover:underline">
+              <Link to="/privacy" className="text-indigo-700 hover:underline">
                 Privacy Policy
               </Link>
             </p>

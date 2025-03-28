@@ -27,9 +27,6 @@ public class SecurityConfig {
     @Autowired
     private AuthService authService;
 
-    @Value("${frontend.url}") // Inject the frontend.url property
-    private String frontendUrl;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -44,7 +41,7 @@ public class SecurityConfig {
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : frontendUrl + "/feed"; // Use frontendUrl dynamically
+                                    : "https://thinkflow-xi.vercel.app/feed";
                             response.sendRedirect(redirectUrl);
                         })
                         .failureUrl("/login?error=true")
@@ -73,7 +70,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendUrl)); // Use the injected frontendUrl
+        configuration.setAllowedOrigins(List.of("https://thinkflow-xi.vercel.app")); // Use the injected frontendUrl
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

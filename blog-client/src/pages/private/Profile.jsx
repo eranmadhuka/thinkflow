@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import {
   Camera,
   Edit2,
@@ -18,6 +19,7 @@ import UserImg from "../../assets/images/user.png";
 
 const ProfilePage = () => {
   const { id } = useParams();
+  const { logout } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -26,6 +28,7 @@ const ProfilePage = () => {
   const [followersDetails, setFollowersDetails] = useState([]);
   const [followingDetails, setFollowingDetails] = useState([]);
   const [savedPosts, setSavedPosts] = useState([]);
+  const navigate = useNavigate();
 
   const statusOptions = [
     { value: "Single", emoji: "💘", description: "Looking for love" },
@@ -45,7 +48,9 @@ const ProfilePage = () => {
   const followUser = async (followeeId) => {
     try {
       await axios.post(
-        `http://localhost:8080/user/${loggedInUser.id}/follow/${followeeId}`,
+        `${import.meta.env.VITE_API_URL}/user/${
+          loggedInUser.id
+        }/follow/${followeeId}`,
         {},
         { withCredentials: true }
       );
@@ -61,7 +66,9 @@ const ProfilePage = () => {
   const unfollowUser = async (followeeId) => {
     try {
       await axios.post(
-        `http://localhost:8080/user/${loggedInUser.id}/unfollow/${followeeId}`,
+        `${import.meta.env.VITE_API_URL}/user/${
+          loggedInUser.id
+        }/unfollow/${followeeId}`,
         {},
         { withCredentials: true }
       );
@@ -75,16 +82,7 @@ const ProfilePage = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:8080/logout",
-        {},
-        { withCredentials: true }
-      );
-      window.location.href = "http://localhost:5173/login";
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    logout();
   };
 
   const handleDeleteAccount = async () => {
@@ -101,9 +99,12 @@ const ProfilePage = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:8080/user/${loggedInUser.id}`, {
-          withCredentials: true,
-        });
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/user/${loggedInUser.id}`,
+          {
+            withCredentials: true,
+          }
+        );
         Swal.fire({
           title: "Goodbye! 😢",
           text: "Your account has been deleted. We’re sad to see you go!",
@@ -111,7 +112,7 @@ const ProfilePage = () => {
           timer: 2500, // Slightly longer to let the message sink in
           showConfirmButton: false,
         }).then(() => {
-          window.location.href = "http://localhost:5173/login";
+          navigate("/login");
         });
       } catch (error) {
         console.error("Failed to delete account:", error);
@@ -157,26 +158,26 @@ const ProfilePage = () => {
       try {
         setLoading(true);
         const loggedInUserResponse = await axios.get(
-          "http://localhost:8080/user/profile",
+          `${import.meta.env.VITE_API_URL}/user/profile`,
           { withCredentials: true }
         );
         setLoggedInUser(loggedInUserResponse.data);
 
         const userResponse = await axios.get(
-          `http://localhost:8080/user/profile/${id}`,
+          `${import.meta.env.VITE_API_URL}/user/profile/${id}`,
           { withCredentials: true }
         );
         setUser(userResponse.data);
 
         const postsResponse = await axios.get(
-          `http://localhost:8080/posts/user/${id}`,
+          `${import.meta.env.VITE_API_URL}/posts/user/${id}`,
           { withCredentials: true }
         );
         setPosts(postsResponse.data);
 
         if (userResponse.data.followers?.length > 0) {
           const followersResponse = await axios.post(
-            "http://localhost:8080/user/details",
+            `${import.meta.env.VITE_API_URL}/user/details`,
             userResponse.data.followers,
             { withCredentials: true }
           );
@@ -187,7 +188,7 @@ const ProfilePage = () => {
 
         if (userResponse.data.following?.length > 0) {
           const followingResponse = await axios.post(
-            "http://localhost:8080/user/details",
+            `${import.meta.env.VITE_API_URL}/user/details`,
             userResponse.data.following,
             { withCredentials: true }
           );
@@ -198,7 +199,9 @@ const ProfilePage = () => {
 
         // Fetch saved posts (assuming full objects for consistency)
         const savedPostsResponse = await axios.get(
-          `http://localhost:8080/user/${loggedInUserResponse.data.id}/saved-posts`,
+          `${import.meta.env.VITE_API_URL}/user/${
+            loggedInUserResponse.data.id
+          }/saved-posts`,
           { withCredentials: true }
         );
         setSavedPosts(savedPostsResponse.data.map((post) => post.id));

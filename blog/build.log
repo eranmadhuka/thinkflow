@@ -1,0 +1,160 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 422B done
+#1 DONE 0.0s
+
+#2 [auth] library/ibm-semeru-runtimes:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 [auth] library/maven:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/maven:3.9.9-ibm-semeru-17-focal
+#4 ...
+
+#5 [internal] load metadata for docker.io/library/ibm-semeru-runtimes:open-17-jre-focal
+#5 DONE 4.2s
+
+#4 [internal] load metadata for docker.io/library/maven:3.9.9-ibm-semeru-17-focal
+#4 DONE 4.2s
+
+#6 [internal] load .dockerignore
+#6 transferring context:
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 resolve docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a done
+#7 sha256:40fc8a46fd16993d695ad3358fe25a4e2b34de4542bc655273af97349e2818e0 2.73kB / 2.73kB done
+#7 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 0B / 25.97MB 0.1s
+#7 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 0B / 15.94MB 0.1s
+#7 sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a 5.33kB / 5.33kB done
+#7 sha256:d98a6ad124b4d991f0427ef01c74e8c62dfedc767f5a2850badeb0a1920e79c3 10.86kB / 10.86kB done
+#7 ...
+
+#8 [internal] load build context
+#8 transferring context: 37.18MB 0.2s done
+#8 DONE 0.2s
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 1.05MB / 15.94MB 1.6s
+#7 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 1.05MB / 25.97MB 5.2s
+#7 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 1.05MB / 15.94MB 6.6s
+#7 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 2.10MB / 15.94MB 6.7s
+#7 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 3.15MB / 25.97MB 8.4s
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 resolve docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e done
+#9 sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e 5.33kB / 5.33kB done
+#9 sha256:f4dfb640a37c672a69ef8fba2b501c85d2c4f596a27aba2eaa842cd405e338f9 1.78kB / 1.78kB done
+#9 sha256:2ed7f44a40772439945f15af063b284f73a29f89bcb678ae8f592d4ad8fb87fd 7.42kB / 7.42kB done
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 3.15MB / 48.08MB 8.8s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 3.15MB / 15.94MB 9.8s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 5.24MB / 25.97MB 11.7s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 4.19MB / 15.94MB 13.0s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 6.29MB / 48.08MB 13.7s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 7.34MB / 25.97MB 14.6s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 5.24MB / 15.94MB 15.5s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 9.44MB / 25.97MB 18.0s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 6.29MB / 15.94MB 18.0s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 8.39MB / 48.08MB 18.8s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 7.34MB / 15.94MB 20.5s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 11.53MB / 25.97MB 22.4s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 8.39MB / 15.94MB 22.4s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 10.49MB / 48.08MB 23.8s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 9.44MB / 15.94MB 24.5s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 13.63MB / 25.97MB 26.2s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 10.49MB / 15.94MB 26.4s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 13.63MB / 48.08MB 27.9s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 11.53MB / 15.94MB 28.6s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 12.58MB / 15.94MB 30.8s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 15.73MB / 25.97MB 31.0s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 15.73MB / 48.08MB 32.9s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 13.63MB / 15.94MB 33.9s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 17.83MB / 25.97MB 34.9s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 14.68MB / 15.94MB 36.4s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 18.87MB / 48.08MB 36.8s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 19.92MB / 25.97MB 38.2s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 15.73MB / 15.94MB 38.5s
+#9 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 15.94MB / 15.94MB 38.9s done
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 0B / 4.74MB 39.0s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 15.94MB / 15.94MB 38.9s done
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 22.02MB / 25.97MB 41.4s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 22.02MB / 48.08MB 42.0s
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 1.05MB / 4.74MB 42.9s
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 2.10MB / 4.74MB 45.1s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 24.12MB / 25.97MB 45.4s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 25.17MB / 48.08MB 46.9s
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 3.15MB / 4.74MB 47.2s
+#9 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 25.97MB / 25.97MB 49.3s done
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 4.19MB / 4.74MB 49.4s
+#9 extracting sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 0.1s
+#9 extracting sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 0.6s done
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:1b9f3c55f9d4aa5c52eb67a4cb7d0f4726ab85a413b50e3e3fe788befce3d297 25.97MB / 25.97MB 49.3s done
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 0B / 210.29MB 49.9s
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 extracting sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677
+#9 sha256:b418c9737728bf18aad5b9d17b7096cf3fcb2ca36e31f7b7192bcba08afb2767 4.74MB / 4.74MB 50.1s done
+#9 extracting sha256:106eaed27a13a2bcd67ca45fe8b16e8b489640ce2e78661c8b9cd4d9de726677 0.5s done
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 28.31MB / 48.08MB 50.7s
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 29.36MB / 48.08MB 55.8s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 5.24MB / 210.29MB 57.8s
+#7 sha256:e7de8b5e13775493e7f57d62d9b9464f3344701257617c18bb56bcbd054c8838 2.10MB / 5.84MB 57.8s
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 30.41MB / 48.08MB 61.0s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 9.44MB / 210.29MB 65.6s
+#7 sha256:e7de8b5e13775493e7f57d62d9b9464f3344701257617c18bb56bcbd054c8838 5.84MB / 5.84MB 63.9s done
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 0B / 29.90MB 65.6s
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 2.10MB / 29.90MB 68.5s
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 13.63MB / 210.29MB 70.7s
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 4.19MB / 29.90MB 71.9s
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 6.29MB / 29.90MB 74.8s
+#7 ...
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 36.70MB / 48.08MB 75.8s
+#9 ...
+
+#7 [build 1/4] FROM docker.io/library/maven:3.9.9-ibm-semeru-17-focal@sha256:28cb0f014b354de4984af1c26f7388c24a298f5e10c96ed5af410608fbab087a
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 15.73MB / 210.29MB 75.9s
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 8.39MB / 29.90MB 78.1s
+#7 sha256:d0f3c055cf9dbac24955061e96cab8826f264fc4feebefcff82ad6b42a3305ce 17.83MB / 210.29MB 81.0s
+#7 sha256:1e7d18817c08603d30ecd4121a47bd53f1aa89373e63ac22ccb8201f7ed6dd46 10.49MB / 29.90MB 82.0s
+#7 CANCELED
+
+#9 [stage-1 1/3] FROM docker.io/library/ibm-semeru-runtimes:open-17-jre-focal@sha256:b494073e225577bd90ef06c7ed859ff35e84b00a22b6f2c03e3db114cb631a9e
+#9 sha256:6b53dc0448ffbf9f772fd39352f7481ca99f890f02cf149a1b29a58d37c2c64e 39.85MB / 48.08MB 82.1s
+ERROR: failed to solve: Canceled: context canceled

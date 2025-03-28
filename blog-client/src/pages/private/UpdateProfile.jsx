@@ -56,7 +56,7 @@ const UpdateProfile = () => {
       };
 
       const response = await axios.put(
-        `http://localhost:8080/user/profile/${user.id}`,
+        `${import.meta.env.VITE_API_URL}/user/profile/${user.id}`,
         updatedUser,
         { withCredentials: true }
       );

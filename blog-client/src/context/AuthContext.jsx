@@ -9,9 +9,12 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/user/profile", {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/user/profile`,
+        {
+          withCredentials: true,
+        }
+      );
       setUser(response.data);
     } catch (error) {
       setUser(null);
@@ -27,23 +30,25 @@ export const AuthProvider = ({ children }) => {
   const login = (provider) => {
     const currentPath = window.location.pathname;
     localStorage.setItem("redirectAfterLogin", currentPath || "/feed");
-    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+    window.location.href = `${
+      import.meta.env.VITE_API_URL
+    }/oauth2/authorization/${provider}`;
   };
 
   const logout = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/logout",
+        `${import.meta.env.VITE_API_URL}/logout`,
         {},
         { withCredentials: true }
       );
-      console.log("Logout response:", response.data); // Should log "Logout successful"
+      console.log("Logout response:", response.data);
       setUser(null);
-      window.location.href = "/login"; // Navigate after successful logout
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);
-      setUser(null); // Clear user even on failure
-      window.location.href = "/login"; // Fallback navigation
+      setUser(null);
+      window.location.href = "/login";
     }
   };
 

@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import MediaUpload from "./MediaUpload";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase/firebase";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 const EditPost = () => {
   const { user } = useContext(AuthContext);
@@ -23,7 +23,7 @@ const EditPost = () => {
     const fetchPostDetails = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/posts/${postId}`,
+          `${import.meta.env.VITE_API_URL}/posts/${postId}`,
           { withCredentials: true }
         );
 
@@ -133,7 +133,7 @@ const EditPost = () => {
 
       // Send a PUT request to update the blog post
       const response = await axios.put(
-        `http://localhost:8080/posts/${postId}`,
+        `${import.meta.env.VITE_API_URL}/posts/${postId}`,
         {
           title,
           content,

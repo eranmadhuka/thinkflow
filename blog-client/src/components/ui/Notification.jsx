@@ -8,19 +8,19 @@ const Notification = ({ userId }) => {
   useEffect(() => {
     const client = new Client({
       webSocketFactory: () => {
-        console.log("Creating SockJS connection to ws://localhost:8080/ws");
-        return new SockJS("http://localhost:8080/ws");
+        // console.log("Creating SockJS connection to ws://localhost:8080/ws");
+        return new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
       },
       reconnectDelay: 5000,
       debug: (str) => console.log("STOMP Debug:", str),
     });
 
     client.onConnect = () => {
-      console.log("Connected to WebSocket");
+      // console.log("Connected to WebSocket");
       client.subscribe(`/user/${userId}/notifications`, (message) => {
-        console.log("Received message:", message.body); // Log raw message
+        // console.log("Received message:", message.body);
         const receivedNotification = JSON.parse(message.body);
-        console.log("Parsed notification:", receivedNotification); // Log parsed object
+        // console.log("Parsed notification:", receivedNotification);
         setNotifications((prev) => [
           receivedNotification.message,
           ...prev.slice(0, 4),
@@ -29,22 +29,22 @@ const Notification = ({ userId }) => {
     };
 
     client.onStompError = (frame) => {
-      console.error("STOMP error:", frame.headers?.message, frame.body);
+      // console.error("STOMP error:", frame.headers?.message, frame.body);
     };
 
     client.onWebSocketError = (error) => {
-      console.error("WebSocket error:", error);
+      // console.error("WebSocket error:", error);
     };
 
     client.onDisconnect = () => {
-      console.log("Disconnected from WebSocket");
+      // console.log("Disconnected from WebSocket");
     };
 
-    console.log("Activating STOMP client...");
+    // console.log("Activating STOMP client...");
     client.activate();
 
     return () => {
-      console.log("Deactivating STOMP client...");
+      // console.log("Deactivating STOMP client...");
       client.deactivate();
     };
   }, [userId]);

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import UserImg from "../../assets/images/user.png";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   const { user } = useContext(AuthContext);
@@ -44,21 +44,21 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     const fetchPostDetails = async () => {
       try {
         const likesResponse = await axios.get(
-          `http://localhost:8080/posts/${post.id}/like-count`,
+          `${import.meta.env.VITE_API_URL}/posts/${post.id}/like-count`,
           { withCredentials: true }
         );
         setLikes(likesResponse.data);
 
         if (user) {
           const userLikeResponse = await axios.get(
-            `http://localhost:8080/posts/${post.id}/has-liked`,
+            `${import.meta.env.VITE_API_URL}/posts/${post.id}/has-liked`,
             { withCredentials: true }
           );
           setHasLiked(userLikeResponse.data);
         }
 
         const commentsResponse = await axios.get(
-          `http://localhost:8080/posts/${post.id}/comments`,
+          `${import.meta.env.VITE_API_URL}/posts/${post.id}/comments`,
           { withCredentials: true }
         );
         setCommentCount(commentsResponse.data.length);
@@ -74,7 +74,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     if (!user) return alert("You must be logged in to like posts.");
     try {
       await axios.post(
-        `http://localhost:8080/posts/${post.id}/like`,
+        `${import.meta.env.VITE_API_URL}/posts/${post.id}/like`,
         {},
         { withCredentials: true }
       );
@@ -91,14 +91,14 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     try {
       if (isSaved) {
         await axios.post(
-          `http://localhost:8080/user/${user.id}/unsave/${postId}`,
+          `${import.meta.env.VITE_API_URL}/user/${user.id}/unsave/${postId}`,
           {},
           { withCredentials: true }
         );
         setSavedPosts((prev) => prev.filter((id) => id !== postId));
       } else {
         await axios.post(
-          `http://localhost:8080/user/${user.id}/save/${postId}`,
+          `${import.meta.env.VITE_API_URL}/user/${user.id}/save/${postId}`,
           {},
           { withCredentials: true }
         );
@@ -115,15 +115,15 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
       text: "This will permanently delete your post. You can’t undo this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33", // Red for delete
-      cancelButtonColor: "#4f46e5", // Indigo-600
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#4f46e5",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "No, keep it",
     });
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:8080/posts/${post.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/posts/${post.id}`, {
           withCredentials: true,
         });
         setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
@@ -131,7 +131,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
           title: "Deleted!",
           text: "Your post has been successfully removed.",
           icon: "success",
-          confirmButtonColor: "#4f46e5", // Indigo-600
+          confirmButtonColor: "#4f46e5",
           timer: 1500,
           showConfirmButton: false,
         });
@@ -150,7 +150,9 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   const handleUnfollowUser = async () => {
     try {
       await axios.post(
-        `http://localhost:8080/user/${user.id}/unfollow/${post.user.id}`,
+        `${import.meta.env.VITE_API_URL}/user/${user.id}/unfollow/${
+          post.user.id
+        }`,
         {},
         { withCredentials: true }
       );

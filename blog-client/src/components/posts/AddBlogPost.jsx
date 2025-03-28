@@ -91,7 +91,7 @@ const AddBlogPost = () => {
 
       // Send a POST request to create a new blog post
       const response = await axios.post(
-        "http://localhost:8080/posts",
+        `${import.meta.env.VITE_API_URL}/posts`,
         {
           title,
           content,

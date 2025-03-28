@@ -39,13 +39,13 @@ const Sidebar = () => {
     const fetchUserStats = async () => {
       try {
         const userResponse = await axios.get(
-          "http://localhost:8080/user/profile",
+          `${import.meta.env.VITE_API_URL}/user/profile`,
           { withCredentials: true }
         );
         setUser(userResponse.data);
 
         const postsResponse = await axios.get(
-          `http://localhost:8080/posts/user/${userResponse.data.id}`,
+          `${import.meta.env.VITE_API_URL}/posts/user/${userResponse.data.id}`,
           { withCredentials: true }
         );
         setPosts(postsResponse.data);

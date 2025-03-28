@@ -1,4 +1,3 @@
-// src/context/NotificationContext.jsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -12,32 +11,32 @@ export const NotificationProvider = ({ children, userId }) => {
     if (!userId) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_URL}/ws`),
       reconnectDelay: 5000,
       debug: (str) => console.log("STOMP Debug:", str),
     });
 
     client.onConnect = () => {
-      console.log("Connected to WebSocket");
+      // console.log("Connected to WebSocket");
       client.subscribe(`/user/${userId}/notifications`, (message) => {
         const receivedNotification = JSON.parse(message.body);
         setNotifications((prev) => [
-          { ...receivedNotification, read: false }, // Ensure read is set
+          { ...receivedNotification, read: false },
           ...prev.slice(0, 4),
         ]);
       });
     };
 
     client.onStompError = (frame) => {
-      console.error("STOMP error:", frame.headers?.message, frame.body);
+      // console.error("STOMP error:", frame.headers?.message, frame.body);
     };
 
     client.onWebSocketError = (error) => {
-      console.error("WebSocket error:", error);
+      // console.error("WebSocket error:", error);
     };
 
     client.onDisconnect = () => {
-      console.log("Disconnected from WebSocket");
+      // console.log("Disconnected from WebSocket");
     };
 
     client.activate();

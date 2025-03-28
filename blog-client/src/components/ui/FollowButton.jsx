@@ -7,7 +7,7 @@ export const FollowButton = ({ user }) => {
   const handleFollow = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:8080/users/${user.id}/follow`,
+        `${import.meta.env.VITE_API_URL}/users/${user.id}/follow`,
         {},
         { withCredentials: true }
       );

@@ -9,7 +9,7 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [followingPosts, setFollowingPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savedPosts, setSavedPosts] = useState([]); // Array of post IDs
+  const [savedPosts, setSavedPosts] = useState([]);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const Feed = () => {
 
         // Fetch all posts for "For You" tab
         const allPostsResponse = await axios.get(
-          "http://localhost:8080/posts/feed",
+          `${import.meta.env.VITE_API_URL}/posts/feed`,
           { withCredentials: true }
         );
         const postsData = Array.isArray(allPostsResponse.data)
@@ -30,7 +30,7 @@ const Feed = () => {
 
         // Fetch following posts
         const followingPostsResponse = await axios.get(
-          "http://localhost:8080/posts/following",
+          "${import.meta.env.VITE_API_URL}/posts/following",
           { withCredentials: true }
         );
         const followingPostsData = Array.isArray(followingPostsResponse.data)
@@ -56,7 +56,7 @@ const Feed = () => {
 
       try {
         const response = await axios.get(
-          `http://localhost:8080/user/${user.id}/saved-posts`,
+          `${import.meta.env.VITE_API_URL}/user/${user.id}/saved-posts`,
           { withCredentials: true }
         );
 
@@ -84,17 +84,17 @@ const Feed = () => {
     try {
       const postsWithCountsPromises = postsArray.map(async (post) => {
         const likesResponse = await axios.get(
-          `http://localhost:8080/posts/${post.id}/like-count`,
+          `${import.meta.env.VITE_API_URL}/posts/${post.id}/like-count`,
           { withCredentials: true }
         );
         const commentsResponse = await axios.get(
-          `http://localhost:8080/posts/${post.id}/comments`,
+          `${import.meta.env.VITE_API_URL}/posts/${post.id}/comments`,
           { withCredentials: true }
         );
         let hasLiked = false;
         if (user) {
           const userLikeResponse = await axios.get(
-            `http://localhost:8080/posts/${post.id}/has-liked`,
+            `${import.meta.env.VITE_API_URL}/posts/${post.id}/has-liked`,
             { withCredentials: true }
           );
           hasLiked = userLikeResponse.data;
@@ -126,7 +126,7 @@ const Feed = () => {
 
     try {
       await axios.post(
-        `http://localhost:8080/posts/${postId}/like`,
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/like`,
         {},
         { withCredentials: true }
       );

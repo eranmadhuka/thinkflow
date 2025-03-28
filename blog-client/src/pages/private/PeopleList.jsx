@@ -14,14 +14,14 @@ const PeopleList = () => {
   const fetchData = useCallback(async () => {
     try {
       const loggedInResponse = await axios.get(
-        "http://localhost:8080/user/profile",
+        `${import.meta.env.VITE_API_URL}/user/profile`,
         { withCredentials: true }
       );
       const loggedInUserData = loggedInResponse.data;
       setLoggedInUser(loggedInUserData);
 
       const usersResponse = await axios.get(
-        "http://localhost:8080/user/users",
+        `${import.meta.env.VITE_API_URL}/user/users`,
         { withCredentials: true }
       );
 

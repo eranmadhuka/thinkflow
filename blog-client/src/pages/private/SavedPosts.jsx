@@ -13,7 +13,7 @@ const SavedPosts = () => {
 
       try {
         const savedResponse = await axios.get(
-          `http://localhost:8080/user/${user.id}/saved-posts`,
+          `${import.meta.env.VITE_API_URL}/user/${user.id}/saved-posts`,
           { withCredentials: true }
         );
 
@@ -26,7 +26,7 @@ const SavedPosts = () => {
             )
           ) {
             const postPromises = savedResponse.data.map((postId) =>
-              axios.get(`http://localhost:8080/posts/${postId}`, {
+              axios.get(`${import.meta.env.VITE_API_URL}/posts/${postId}`, {
                 withCredentials: true,
               })
             );
@@ -57,7 +57,7 @@ const SavedPosts = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/posts/${postId}/like`,
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/like`,
         {},
         { withCredentials: true }
       );

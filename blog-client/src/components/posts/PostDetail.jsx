@@ -43,28 +43,28 @@ const PostDetail = () => {
       try {
         setLoading(true);
         const postResponse = await axios.get(
-          `http://localhost:8080/posts/${postId}`,
+          `${import.meta.env.VITE_API_URL}/posts/${postId}`,
           { withCredentials: true }
         );
         const postData = postResponse.data;
         setPost(postData);
 
         const likesResponse = await axios.get(
-          `http://localhost:8080/posts/${postId}/like-count`,
+          `${import.meta.env.VITE_API_URL}/posts/${postId}/like-count`,
           { withCredentials: true }
         );
         setLikes(likesResponse.data || 0); // Fallback to 0 if undefined
 
         if (user) {
           const userLikeResponse = await axios.get(
-            `http://localhost:8080/posts/${postId}/has-liked`,
+            `${import.meta.env.VITE_API_URL}/posts/${postId}/has-liked`,
             { withCredentials: true }
           );
           setHasLiked(userLikeResponse.data);
         }
 
         const commentsResponse = await axios.get(
-          `http://localhost:8080/posts/${postId}/comments`,
+          `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`,
           { withCredentials: true }
         );
         const fetchedComments = Array.isArray(commentsResponse.data)
@@ -95,14 +95,18 @@ const PostDetail = () => {
       fetchedComments.map(async (comment) => {
         try {
           const likeCountResponse = await axios.get(
-            `http://localhost:8080/posts/comments/${comment.id}/like-count`,
+            `${import.meta.env.VITE_API_URL}/posts/comments/${
+              comment.id
+            }/like-count`,
             { withCredentials: true }
           );
           likesObj[comment.id] = likeCountResponse.data || 0;
 
           if (user) {
             const hasLikedResponse = await axios.get(
-              `http://localhost:8080/posts/comments/${comment.id}/has-liked`,
+              `${import.meta.env.VITE_API_URL}/posts/comments/${
+                comment.id
+              }/has-liked`,
               { withCredentials: true }
             );
             hasLikedObj[comment.id] = hasLikedResponse.data;
@@ -111,7 +115,9 @@ const PostDetail = () => {
           setReplyText((prev) => ({ ...prev, [comment.id]: "" }));
 
           const repliesResponse = await axios.get(
-            `http://localhost:8080/posts/comments/${comment.id}/replies`,
+            `${import.meta.env.VITE_API_URL}/posts/comments/${
+              comment.id
+            }/replies`,
             { withCredentials: true }
           );
           repliesObj[comment.id] = Array.isArray(repliesResponse.data)
@@ -137,7 +143,7 @@ const PostDetail = () => {
     setLoadingLikes(true);
     try {
       const response = await axios.get(
-        `http://localhost:8080/posts/${post.id}/likes`,
+        `${import.meta.env.VITE_API_URL}/posts/${post.id}/likes`,
         { withCredentials: true }
       );
       setLikesList(Array.isArray(response.data) ? response.data : []);
@@ -164,7 +170,7 @@ const PostDetail = () => {
 
     try {
       await axios.post(
-        `http://localhost:8080/posts/${post.id}/like`,
+        `${import.meta.env.VITE_API_URL}/posts/${post.id}/like`,
         {},
         { withCredentials: true }
       );
@@ -180,7 +186,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/posts/${post.id}/comment`,
+        `${import.meta.env.VITE_API_URL}/posts/${post.id}/comment`,
         { content: commentText },
         { withCredentials: true }
       );
@@ -205,7 +211,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/posts/comments/${commentId}/like`,
+        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}/like`,
         {},
         { withCredentials: true }
       );
@@ -236,7 +242,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/posts/comments/${commentId}/reply`,
+        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}/reply`,
         { content: replyText[commentId] },
         { withCredentials: true }
       );
@@ -267,9 +273,12 @@ const PostDetail = () => {
       return;
 
     try {
-      await axios.delete(`http://localhost:8080/posts/comments/${commentId}`, {
-        withCredentials: true,
-      });
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}`,
+        {
+          withCredentials: true,
+        }
+      );
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== commentId)
       );
@@ -290,7 +299,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:8080/posts/comments/${commentId}`,
+        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}`,
         { content: editCommentText },
         { withCredentials: true }
       );

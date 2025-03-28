@@ -19,8 +19,12 @@ const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
     e.stopPropagation();
     try {
       const endpoint = isFollowing
-        ? `http://localhost:8080/user/${loggedInUser.id}/unfollow/${user.id}`
-        : `http://localhost:8080/user/${loggedInUser.id}/follow/${user.id}`;
+        ? `${import.meta.env.VITE_API_URL}/user/${loggedInUser.id}/unfollow/${
+            user.id
+          }`
+        : `${import.meta.env.VITE_API_URL}/user/${loggedInUser.id}/follow/${
+            user.id
+          }`;
       await axios.post(endpoint, {}, { withCredentials: true });
       setIsFollowing(!isFollowing);
       if (onFollowToggle) onFollowToggle(user.id, !isFollowing);

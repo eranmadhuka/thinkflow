@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import UserImg from "../../assets/images/user.png";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   const { user } = useContext(AuthContext);
@@ -36,7 +37,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
     }
   };
 
-  const isSaved = savedPosts?.includes(post.id); // Determined by savedPosts prop
+  const isSaved = savedPosts?.includes(post.id);
   const isOwnPost = user && post.user?.id === user.id;
 
   useEffect(() => {
@@ -89,16 +90,13 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
 
     try {
       if (isSaved) {
-        // Unsave the post
         await axios.post(
           `http://localhost:8080/user/${user.id}/unsave/${postId}`,
           {},
           { withCredentials: true }
         );
         setSavedPosts((prev) => prev.filter((id) => id !== postId));
-        // Do NOT update posts here; let it stay in the Feed
       } else {
-        // Save the post
         await axios.post(
           `http://localhost:8080/user/${user.id}/save/${postId}`,
           {},
@@ -112,14 +110,40 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
   };
 
   const handleDeletePost = async () => {
-    try {
-      await axios.delete(`http://localhost:8080/posts/${post.id}`, {
-        withCredentials: true,
-      });
-      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
-    } catch (error) {
-      console.error("Failed to delete post:", error);
-      alert("Failed to delete post. Please try again.");
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will permanently delete your post. You can’t undo this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33", // Red for delete
+      cancelButtonColor: "#4f46e5", // Indigo-600
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, keep it",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`http://localhost:8080/posts/${post.id}`, {
+          withCredentials: true,
+        });
+        setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your post has been successfully removed.",
+          icon: "success",
+          confirmButtonColor: "#4f46e5", // Indigo-600
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Failed to delete post:", error);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete your post. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#4f46e5", // Indigo-600
+        });
+      }
     }
   };
 
@@ -198,13 +222,13 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
                         <Bookmark size={16} className="mr-2" />
                         {isSaved ? "Unsave Post" : "Save Post"}
                       </button>
-                      <button
+                      {/* <button
                         onClick={handleUnfollowUser}
                         className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         role="menuitem"
                       >
                         <UserMinus size={16} className="mr-2" /> Unfollow User
-                      </button>
+                      </button> */}
                     </>
                   )}
                 </div>
@@ -239,7 +263,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
             onClick={handleLike}
             className={`flex items-center space-x-1 ${
               hasLiked
-                ? "text-blue-500 hover:text-blue-600"
+                ? "text-indigo-600 hover:text-indigo-700"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -261,7 +285,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
             onClick={() => toggleSavePost(post.id)}
             className={`flex items-center space-x-1 ${
               isSaved
-                ? "text-blue-500 hover:text-blue-600"
+                ? "text-indigo-600 hover:text-indigo-700"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >

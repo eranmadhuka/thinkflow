@@ -43,7 +43,7 @@ const Register = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
           <h1 className="font-abril text-3xl text-center text-gray-900 mb-6">
-            Create Your Account
+            Join the Party – Make Your Account!
           </h1>
 
           <div className="space-y-4">
@@ -66,7 +66,7 @@ const Register = () => {
           <div className="text-center space-y-4 mt-6">
             <p className="text-center text-gray-600 font-jost mt-6">
               Already have an account?{" "}
-              <Link to="/login" className="text-emerald-700 hover:underline">
+              <Link to="/login" className="text-indigo-700 hover:underline">
                 Sign in
               </Link>
             </p>

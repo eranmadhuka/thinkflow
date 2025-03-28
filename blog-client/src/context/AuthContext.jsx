@@ -25,38 +25,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (provider) => {
-    // Store current path to redirect back after login
     const currentPath = window.location.pathname;
     localStorage.setItem("redirectAfterLogin", currentPath || "/feed");
-
-    // Redirect to OAuth login endpoint
     window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
   };
 
   const logout = async () => {
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:8080/logout",
         {},
         { withCredentials: true }
       );
+      console.log("Logout response:", response.data); // Should log "Logout successful"
       setUser(null);
-      window.location.href = "/login";
+      window.location.href = "/login"; // Navigate after successful logout
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout failed:", error.response?.data || error.message);
+      setUser(null); // Clear user even on failure
+      window.location.href = "/login"; // Fallback navigation
     }
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        loading,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, setUser, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { IoIosMenu, IoMdNotificationsOutline } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
@@ -14,7 +14,6 @@ const Header = ({ onMenuToggle }) => {
   const [notificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -24,7 +23,6 @@ const Header = ({ onMenuToggle }) => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
   };
 
   return (
@@ -37,12 +35,14 @@ const Header = ({ onMenuToggle }) => {
         <div className="flex h-14 sm:h-16 items-center justify-between">
           {/* Left Section */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
-              onClick={onMenuToggle}
-            >
-              <IoIosMenu className="h-5 w-5 sm:h-6 sm:w-6" />
-            </button>
+            {user && (
+              <button
+                className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                onClick={onMenuToggle}
+              >
+                <IoIosMenu className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+            )}
             <Link to="/" className="flex-shrink-0">
               <img className="h-7 sm:h-8 w-auto" src={Logo} alt="Logo" />
             </Link>

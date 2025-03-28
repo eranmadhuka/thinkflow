@@ -227,20 +227,20 @@ const ProfilePage = () => {
             </h2>
             <p className="text-sm text-gray-600">{user?.email}</p>
 
-            {user?.status && (
-              <div className="flex items-center mt-2 text-sm text-gray-700">
-                <span className="text-lg mr-2">
-                  {statusOptions.find((option) => option.value === user.status)
-                    ?.emoji || "❓"}
-                </span>
-                <span>
-                  {
-                    statusOptions.find((option) => option.value === user.status)
-                      ?.description
-                  }
-                </span>
-              </div>
-            )}
+            <div className="mt-3 text-center">
+              <label className="block text-xs text-gray-500 mb-1">Status</label>
+
+              <span className="text-lg mr-2">
+                {statusOptions.find((option) => option.value === user.status)
+                  ?.emoji || "❓"}
+              </span>
+              <span>
+                {
+                  statusOptions.find((option) => option.value === user.status)
+                    ?.description
+                }
+              </span>
+            </div>
           </div>
 
           {/* Stats */}
@@ -315,6 +315,7 @@ const ProfilePage = () => {
                 <button
                   onClick={handleDeleteAccount}
                   className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-red-700 text-white rounded-full hover:bg-red-800 transition-colors duration-200 flex items-center justify-center gap-1.5"
+                  disabled
                 >
                   <Trash2 size={16} />
                   Delete Account

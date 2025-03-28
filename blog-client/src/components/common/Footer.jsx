@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-white py-6 mt-12">
+    <footer className="bg-white py-6">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
         <span className="text-sm text-gray-500">
           © 2025 SocialApp. All Rights Reserved.

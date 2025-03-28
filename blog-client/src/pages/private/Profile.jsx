@@ -125,6 +125,33 @@ const ProfilePage = () => {
     }
   };
 
+  const handleCantDeleteAccount = () => {
+    Swal.fire({
+      title: "Nice try! 😆",
+      html: `You thought you could just leave? <br><strong>Sorry, but you're stuck with us forever! 🔒</strong> <br>
+             Our servers cried when you clicked that button. 😢`,
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonColor: "#4f46e5",
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Wait... I can’t leave? 😨",
+      cancelButtonText: "Fine, I’ll stay! 🙄",
+    });
+  };
+
+  // const handleCantDeleteAccount = () => {
+  //   Swal.fire({
+  //     title: "Whoa there, partner! 😲",
+  //     html: `You really wanna delete your account? <br><strong>Think about all the good times we've had! 🎉</strong><br>
+  //            This action is as permanent as a tattoo... but without the cool factor. 🤦‍♂️`,
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     cancelButtonColor: "#4f46e5",
+  //     confirmButtonText: "Oops! Delete button is missing... 🫢",
+  //     cancelButtonText: "Nah, I’ll stay! 😎",
+  //   });
+  // };
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -313,9 +340,9 @@ const ProfilePage = () => {
                   Logout
                 </button>
                 <button
-                  onClick={handleDeleteAccount}
+                  // onClick={handleDeleteAccount}
+                  onClick={handleCantDeleteAccount}
                   className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-red-700 text-white rounded-full hover:bg-red-800 transition-colors duration-200 flex items-center justify-center gap-1.5"
-                  disabled
                 >
                   <Trash2 size={16} />
                   Delete Account

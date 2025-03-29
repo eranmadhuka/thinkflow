@@ -17,6 +17,7 @@ const Sidebar = () => {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true); // New state for image loading
 
   const statusOptions = [
     { value: "Single", emoji: "💘", description: "Looking for love" },
@@ -59,6 +60,11 @@ const Sidebar = () => {
     fetchUserStats();
   }, []);
 
+  // Handle image loading state
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
+
   if (loading) {
     return (
       <aside className="flex flex-col w-64 bg-white rounded-lg border border-gray-100 shadow-sm">
@@ -87,11 +93,18 @@ const Sidebar = () => {
             className="absolute w-full flex justify-center"
             style={{ top: "50%" }}
           >
-            <div className="w-20 h-20 rounded-full border-3 border-white overflow-hidden  flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full border-3 border-white overflow-hidden flex items-center justify-center">
+              {imageLoading && (
+                <div className="animate-pulse h-full w-full bg-gray-200 rounded-full"></div>
+              )}
               <img
                 src={user.picture ? user.picture : UserImg}
                 alt="User Avatar"
-                className="h-full w-full sm:h-full sm:w-full rounded-full object-cover border border-gray-200"
+                className={`h-full w-full sm:h-full sm:w-full rounded-full object-cover border border-gray-200 ${
+                  imageLoading ? "hidden" : "block"
+                }`}
+                onLoad={handleImageLoad}
+                onError={() => setImageLoading(false)}
               />
             </div>
           </div>

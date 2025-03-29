@@ -120,7 +120,7 @@ const ProfilePage = () => {
           title: "Oops! 😓",
           text: "Failed to delete your account. Please try again.",
           icon: "error",
-          confirmButtonColor: "#4f46e5", // Match your indigo-600 theme
+          confirmButtonColor: "#4f46e5",
         });
       }
     }
@@ -252,6 +252,7 @@ const ProfilePage = () => {
               alt="Profile"
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-sm transition-transform duration-300 hover:scale-105"
             />
+
             <h2 className="mt-4 text-lg sm:text-xl font-semibold text-gray-900">
               {user?.name}
             </h2>

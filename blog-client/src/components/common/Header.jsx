@@ -13,6 +13,7 @@ const Header = ({ onMenuToggle }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
@@ -20,6 +21,10 @@ const Header = ({ onMenuToggle }) => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -133,10 +138,17 @@ const Header = ({ onMenuToggle }) => {
                     className="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
+                    {imageLoading && (
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                    )}
                     <img
                       src={user.picture ? user.picture : UserImg}
                       alt="User Avatar"
-                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover border border-gray-200"
+                      className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover border border-gray-200 ${
+                        imageLoading ? "hidden" : "block"
+                      }`}
+                      onLoad={handleImageLoad}
+                      onError={() => setImageLoading(false)}
                     />
                     <span className="hidden md:inline text-sm font-medium text-gray-700 truncate max-w-[100px]">
                       {user.name}

@@ -7,16 +7,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [authError, setAuthError] = useState(null);
 
   const checkAuth = async () => {
     try {
       setLoading(true);
+      setAuthError(null);
+
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/user/profile`,
         {
           withCredentials: true,
         }
       );
+
       if (response.data) {
         console.log("Auth check successful:", response.data);
         setUser(response.data);
@@ -25,11 +29,29 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
       }
     } catch (error) {
+      // Handle the server error
+      const errorMessage =
+        error.response?.data?.error || error.message || "Authentication failed";
+      const statusCode = error.response?.status;
+
       console.error(
-        "Auth check failed:",
+        `Auth check failed (${statusCode}):`,
         error.response?.data || error.message
       );
+
       setUser(null);
+      setAuthError({
+        message: errorMessage,
+        status: statusCode,
+        details: error.response?.data,
+      });
+
+      // If it's a server error (500), log additional info to help debugging
+      if (statusCode === 500) {
+        console.error(
+          "Server error during authentication. Check your backend logs."
+        );
+      }
     } finally {
       setLoading(false);
       setAuthChecked(true);
@@ -43,9 +65,12 @@ export const AuthProvider = ({ children }) => {
   const login = (provider) => {
     const currentPath = window.location.pathname;
     localStorage.setItem("redirectAfterLogin", currentPath || "/feed");
+
+    // Add timestamp to prevent caching issues
+    const timestamp = new Date().getTime();
     window.location.href = `${
       import.meta.env.VITE_API_URL
-    }/oauth2/authorization/${provider}`;
+    }/oauth2/authorization/${provider}?t=${timestamp}`;
   };
 
   const logout = async () => {
@@ -65,9 +90,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add a convenience method to check if auth is truly completed (not loading and checked)
+  const isAuthReady = !loading && authChecked;
+
   return (
     <AuthContext.Provider
-      value={{ user, setUser, loading, authChecked, login, logout, checkAuth }}
+      value={{
+        user,
+        setUser,
+        loading,
+        authChecked,
+        authError,
+        isAuthReady,
+        login,
+        logout,
+        checkAuth,
+      }}
     >
       {children}
     </AuthContext.Provider>

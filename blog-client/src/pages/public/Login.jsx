@@ -7,10 +7,19 @@ import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Login = () => {
-  const { user, loading, authChecked, login, checkAuth } = useAuth();
+  const {
+    user,
+    loading,
+    authChecked,
+    authError,
+    isAuthReady,
+    login,
+    checkAuth,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Check for OAuth callback parameters
   useEffect(() => {
@@ -25,18 +34,23 @@ const Login = () => {
 
   // Handle navigation after auth check is complete
   useEffect(() => {
-    if (authChecked && user) {
+    if (isAuthReady && user) {
       console.log("User authenticated, redirecting...");
       const redirectPath =
         localStorage.getItem("redirectAfterLogin") || "/feed";
       localStorage.removeItem("redirectAfterLogin");
       navigate(redirectPath, { replace: true });
     }
-  }, [user, authChecked, navigate]);
+  }, [user, isAuthReady, navigate]);
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);
     login(provider);
+  };
+
+  const handleRetryAuth = () => {
+    setRetryCount(retryCount + 1);
+    checkAuth();
   };
 
   if (loading || isLoading) {
@@ -60,6 +74,21 @@ const Login = () => {
           <h1 className="font-abril text-3xl text-center text-gray-900 mb-6">
             Time to Enter the Digital Realm!
           </h1>
+
+          {authError && authError.status === 500 && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+              <h3 className="font-bold mb-2">Server Error</h3>
+              <p className="mb-3">
+                There was a problem with the authentication service.
+              </p>
+              <button
+                onClick={handleRetryAuth}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4">
             <button

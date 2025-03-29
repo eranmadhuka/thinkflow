@@ -61,9 +61,19 @@ public class UserController {
     // Get logged-in user's profile
     @GetMapping("/profile")
     public ResponseEntity<User> getLoggedInUserProfile(@AuthenticationPrincipal OAuth2User principal) {
-        String providerId = principal.getAttribute("sub") != null ? principal.getAttribute("sub") : principal.getAttribute("id");
+        if (principal == null) {
+            throw new RuntimeException("Authentication failed: principal is null");
+        }
+        String providerId = principal.getAttribute("sub") != null ?
+                principal.getAttribute("sub") :
+                principal.getAttribute("id");
+
+        if (providerId == null) {
+            throw new RuntimeException("Provider ID not found in principal attributes");
+        }
+
         User user = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with provider ID: " + providerId));
         return ResponseEntity.ok(user);
     }
 

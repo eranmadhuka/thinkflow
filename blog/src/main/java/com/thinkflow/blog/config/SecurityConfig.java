@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : "https://thinkflow-xi.vercel.app/feed";
+                                    : "https://thinkflow-three.vercel.app/feed";
                             response.sendRedirect(redirectUrl);
                         })
                         .failureUrl("/login?error=true")
@@ -70,7 +70,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://thinkflow-xi.vercel.app"));
+        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -30,7 +30,7 @@ const Feed = () => {
 
         // Fetch following posts
         const followingPostsResponse = await axios.get(
-          "${import.meta.env.VITE_API_URL}/posts/following",
+          `${import.meta.env.VITE_API_URL}/posts/following`,
           { withCredentials: true }
         );
         const followingPostsData = Array.isArray(followingPostsResponse.data)

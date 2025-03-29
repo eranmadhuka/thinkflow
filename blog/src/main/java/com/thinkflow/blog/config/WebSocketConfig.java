@@ -21,7 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("https://thinkflow-three.vercel.app")
+                .setAllowedOrigins("http://localhost:5173")
                 .withSockJS(); // Enable SockJS fallback
     }
 }

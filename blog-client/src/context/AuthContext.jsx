@@ -6,20 +6,33 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const checkAuth = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/user/profile`,
         {
           withCredentials: true,
         }
       );
-      setUser(response.data);
+      if (response.data) {
+        console.log("Auth check successful:", response.data);
+        setUser(response.data);
+      } else {
+        console.log("Auth check returned no user data");
+        setUser(null);
+      }
     } catch (error) {
+      console.error(
+        "Auth check failed:",
+        error.response?.data || error.message
+      );
       setUser(null);
     } finally {
       setLoading(false);
+      setAuthChecked(true);
     }
   };
 
@@ -53,7 +66,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, loading, authChecked, login, logout, checkAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -7,24 +7,39 @@ import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Register = () => {
-  const { user, loading, login } = useAuth();
+  const { user, loading, authChecked, login, checkAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check for OAuth callback parameters
   useEffect(() => {
-    if (user) {
-      const origin = location.state?.from?.pathname || "/feed";
-      navigate(origin, { replace: true });
+    const queryParams = new URLSearchParams(window.location.search);
+    const authSuccess = queryParams.get("auth_success");
+
+    if (authSuccess === "true") {
+      // Force re-check authentication status
+      checkAuth();
     }
-  }, [user, navigate, location]);
+  }, [checkAuth]);
+
+  // Handle navigation after auth check is complete
+  useEffect(() => {
+    if (authChecked && user) {
+      console.log("User authenticated, redirecting from register page...");
+      const redirectPath =
+        localStorage.getItem("redirectAfterLogin") || "/feed";
+      localStorage.removeItem("redirectAfterLogin");
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, authChecked, navigate]);
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);
     login(provider);
   };
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

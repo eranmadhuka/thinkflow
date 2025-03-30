@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -30,18 +30,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Ensure session is created
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error", "/ws/**").permitAll() // Public endpoints
-                        .requestMatchers("/user/profile", "/logout").authenticated() // Require authentication
-                        .anyRequest().authenticated() // Everything else requires auth
+                        .requestMatchers("/login", "/error", "/ws/**").permitAll()
+                        .requestMatchers("/user/profile", "/logout").authenticated()
+                        .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : "https://thinkflow-three.vercel.app/login?auth_success=true"; // Updated redirect
+                                    : "http://localhost:5173/login?auth_success=true";
+//                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
+                            System.out.println("OAuth Success - Session ID: " + request.getSession().getId());
                             response.sendRedirect(redirectUrl);
                         })
                         .failureUrl("/login?error=true")
@@ -75,7 +80,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+//        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

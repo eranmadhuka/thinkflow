@@ -12,16 +12,18 @@ const Login = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Login.jsx
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const authSuccess = queryParams.get("auth_success") === "true";
 
-    if (authSuccess && !user && !loading) {
-      console.log("Auth success detected, fetching user...");
-      fetchUser();
-    }
-
-    if (!loading && user) {
+    if (authSuccess) {
+      console.log("Auth success detected, redirecting without fetch...");
+      const redirectPath =
+        sessionStorage.getItem("redirectAfterLogin") || "/feed";
+      sessionStorage.removeItem("redirectAfterLogin");
+      navigate(redirectPath, { replace: true });
+    } else if (!loading && user) {
       console.log("User authenticated, redirecting...");
       const redirectPath =
         sessionStorage.getItem("redirectAfterLogin") || "/feed";

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
@@ -10,10 +10,15 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       setLoading(true);
+      console.log(
+        "Fetching user from:",
+        `${import.meta.env.VITE_API_URL}/user/profile`
+      );
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/user/profile`, // Use /user/profile, not /user/check
+        `${import.meta.env.VITE_API_URL}/user/profile`,
         { withCredentials: true }
       );
+      console.log("User data:", response.data);
       setUser(response.data);
     } catch (error) {
       console.error(

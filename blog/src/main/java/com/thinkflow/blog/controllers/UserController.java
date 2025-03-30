@@ -68,10 +68,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // Get logged-in user's profile
     @GetMapping("/profile")
-    public ResponseEntity<User> getLoggedInUserProfile(@AuthenticationPrincipal OAuth2User principal) {
-        // Spring Security ensures principal is non-null due to .authenticated() in SecurityConfig
+    public ResponseEntity<User> getLoggedInUserProfile(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(null); // Explicit 401
+        }
+
+        OAuth2User principal = (OAuth2User) authentication.getPrincipal();
         String providerId = principal.getAttribute("sub") != null ?
                 principal.getAttribute("sub") :
                 principal.getAttribute("id");

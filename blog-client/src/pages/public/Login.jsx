@@ -1,37 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Login = () => {
-  const { user, loading, login, fetchUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const authSuccess = queryParams.get("auth_success") === "true";
-
-    if (authSuccess) {
-      console.log("Auth success detected, redirecting without fetch...");
-      const redirectPath =
-        sessionStorage.getItem("redirectAfterLogin") || "/feed";
-      console.log("Redirecting to:", redirectPath); // Debug
-      sessionStorage.removeItem("redirectAfterLogin");
-      navigate(redirectPath, { replace: true });
-    }
-  }, [navigate, location.search]); // Simplified dependencies
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);
     login(provider);
   };
 
-  if (loading || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

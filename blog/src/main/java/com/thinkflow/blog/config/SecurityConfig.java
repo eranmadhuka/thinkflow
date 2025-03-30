@@ -45,7 +45,8 @@ public class SecurityConfig {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
 //                                    : "http://localhost:5173/login?auth_success=true";
-                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
+//                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
+                                    : "https://thinkflow-three.vercel.app/feed";
                             System.out.println("OAuth Success - Session ID: " + request.getSession().getId());
                             response.sendRedirect(redirectUrl);
                         })

@@ -1,38 +1,34 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaFacebook } from "react-icons/fa";
+import { FaFacebook } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Register = () => {
-  const { user, loading, authChecked, login, checkAuth } = useAuth();
+  const { user, loading, login, fetchUser } = useAuth(); // Use fetchUser instead of checkAuth
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check for OAuth callback parameters
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const authSuccess = queryParams.get("auth_success");
+    const queryParams = new URLSearchParams(location.search);
+    const authSuccess = queryParams.get("auth_success") === "true";
 
-    if (authSuccess === "true") {
-      // Force re-check authentication status
-      checkAuth();
+    if (authSuccess && !user && !loading) {
+      console.log("Auth success detected, fetching user from register...");
+      fetchUser(); // Fetch user data after successful OAuth
     }
-  }, [checkAuth]);
 
-  // Handle navigation after auth check is complete
-  useEffect(() => {
-    if (authChecked && user) {
+    if (!loading && user) {
       console.log("User authenticated, redirecting from register page...");
       const redirectPath =
-        localStorage.getItem("redirectAfterLogin") || "/feed";
-      localStorage.removeItem("redirectAfterLogin");
+        sessionStorage.getItem("redirectAfterLogin") || "/feed"; // Use sessionStorage to match Login
+      sessionStorage.removeItem("redirectAfterLogin");
       navigate(redirectPath, { replace: true });
     }
-  }, [user, authChecked, navigate]);
+  }, [user, loading, fetchUser, navigate, location.search]);
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);

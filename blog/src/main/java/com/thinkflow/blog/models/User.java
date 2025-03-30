@@ -14,6 +14,7 @@ import java.util.List;
 public class User {
     @Id
     private String id;              // Unique identifier (MongoDB ObjectId)
+
     private List<ProviderIdentity> identities = new ArrayList<>(); // List of provider identities
     private String name;            // User's full name from OAuth provider
     private String email;           // User's email from OAuth provider

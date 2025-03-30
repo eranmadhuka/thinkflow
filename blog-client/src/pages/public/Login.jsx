@@ -1,38 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaFacebook } from "react-icons/fa";
+import { FaFacebook } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Login = () => {
-  const { user, loading, authChecked, login, checkAuth } = useAuth();
+  const { user, loading, login, fetchUser } = useAuth(); // Add fetchUser
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check for OAuth callback parameters
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const authSuccess = queryParams.get("auth_success");
+    const queryParams = new URLSearchParams(location.search);
+    const authSuccess = queryParams.get("auth_success") === "true";
 
-    if (authSuccess === "true") {
-      // Force re-check authentication status
-      checkAuth();
+    if (authSuccess && !user && !loading) {
+      console.log("Auth success detected, fetching user...");
+      fetchUser(); // Fetch user data after successful login
     }
-  }, [checkAuth]);
 
-  // Handle navigation after auth check is complete
-  useEffect(() => {
-    if (authChecked && user) {
+    if (!loading && user) {
       console.log("User authenticated, redirecting...");
       const redirectPath =
-        localStorage.getItem("redirectAfterLogin") || "/feed";
-      localStorage.removeItem("redirectAfterLogin");
+        sessionStorage.getItem("redirectAfterLogin") || "/feed";
+      sessionStorage.removeItem("redirectAfterLogin");
       navigate(redirectPath, { replace: true });
     }
-  }, [user, authChecked, navigate]);
+  }, [user, loading, fetchUser, navigate, location.search]);
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);
@@ -60,7 +56,6 @@ const Login = () => {
           <h1 className="font-abril text-3xl text-center text-gray-900 mb-6">
             Time to Enter the Digital Realm!
           </h1>
-
           <div className="space-y-4">
             <button
               className="w-full flex items-center justify-center space-x-3 rounded-md py-2 px-4 transition-colors duration-200 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -77,7 +72,6 @@ const Login = () => {
               Sign in with Facebook
             </button>
           </div>
-
           <div className="text-center space-y-4 mt-6">
             <p className="text-gray-600 font-jost">
               Don't have an account?{" "}
@@ -85,7 +79,6 @@ const Login = () => {
                 Create one
               </Link>
             </p>
-
             <p className="text-xs text-gray-500 font-jost">
               By signing in, you agree to our{" "}
               <Link to="/terms" className="text-indigo-700 hover:underline">

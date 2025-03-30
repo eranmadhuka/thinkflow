@@ -8,11 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -58,12 +61,17 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/check")
+    public ResponseEntity<Map<String, Boolean>> checkAuth(Authentication authentication) {
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("authenticated", authentication != null && authentication.isAuthenticated());
+        return ResponseEntity.ok(response);
+    }
+
     // Get logged-in user's profile
     @GetMapping("/profile")
     public ResponseEntity<User> getLoggedInUserProfile(@AuthenticationPrincipal OAuth2User principal) {
-        if (principal == null) {
-            throw new RuntimeException("Authentication failed: principal is null");
-        }
+        // Spring Security ensures principal is non-null due to .authenticated() in SecurityConfig
         String providerId = principal.getAttribute("sub") != null ?
                 principal.getAttribute("sub") :
                 principal.getAttribute("id");

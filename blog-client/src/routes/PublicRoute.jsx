@@ -1,16 +1,22 @@
-import { Navigate, Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const PublicRoute = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  // Handle loading state
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/feed");
+    }
+  }, [loading, user, navigate]);
+
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner component
+    return <div>Loading...</div>;
   }
 
-  // Redirect to feed if user is logged in
-  return !user ? <Outlet /> : <Navigate to="/feed" replace />;
+  return user ? null : <Outlet />;
 };
 
 export default PublicRoute;

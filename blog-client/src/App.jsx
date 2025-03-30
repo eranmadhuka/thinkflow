@@ -1,21 +1,19 @@
 import { RouterProvider } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { router } from "./routes/index";
-import React, { useContext } from "react";
 import "./App.css";
 
 function App() {
   return (
     <AuthProvider>
-      <AppWithNotifications />
+      <NotificationProviderWrapper />
     </AuthProvider>
   );
 }
 
-const AppWithNotifications = () => {
-  const { user } = useContext(AuthContext);
-
+const NotificationProviderWrapper = () => {
+  const { user } = useAuth();
   return (
     <NotificationProvider userId={user?.id}>
       <RouterProvider router={router} />

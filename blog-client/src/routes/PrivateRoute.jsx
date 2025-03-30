@@ -1,22 +1,28 @@
-import { useContext } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import React, { useEffect } from "react";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = () => {
-  const { user, loading } = useContext(AuthContext);
-  const location = useLocation();
+  const { user, loading, fetchUser } = useAuth();
+  const navigate = useNavigate();
 
-  // Handle loading state
+  useEffect(() => {
+    if (!user && !loading) {
+      fetchUser(); // Line ~22: This updates state in AuthProvider
+    }
+  }, [user, loading, fetchUser]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [loading, user, navigate]);
+
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner component
+    return <div>Loading...</div>;
   }
 
-  // If no user, redirect to login with current location state
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <Outlet />;
+  return user ? <Outlet /> : null;
 };
 
 export default PrivateRoute;

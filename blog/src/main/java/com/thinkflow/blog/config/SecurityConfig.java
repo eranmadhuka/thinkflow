@@ -3,7 +3,6 @@ package com.thinkflow.blog.config;
 import com.thinkflow.blog.services.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // Import for @Value
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,15 +32,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/profile", "/logout", "/login", "/error", "/ws/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/login", "/error", "/ws/**").permitAll() // Public endpoints
+                        .requestMatchers("/user/profile", "/logout").authenticated() // Require authentication
+                        .anyRequest().authenticated() // Everything else requires auth
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : "https://thinkflow-three.vercel.app/feed";
+                                    : "https://thinkflow-three.vercel.app/login?auth_success=true"; // Updated redirect
                             response.sendRedirect(redirectUrl);
                         })
                         .failureUrl("/login?error=true")
@@ -57,6 +57,11 @@ public class SecurityConfig {
                             response.getWriter().write("Logout successful");
                         })
                         .permitAll()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
                 );
 
         return http.build();

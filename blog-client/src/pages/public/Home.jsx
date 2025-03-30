@@ -6,8 +6,6 @@ import Footer from "../../components/common/Footer";
 import { Link } from "react-router-dom";
 
 const Home = () => {
-  console.log("try" + import.meta.env.VITE_API_URL);
-
   return (
     <>
       <Header />

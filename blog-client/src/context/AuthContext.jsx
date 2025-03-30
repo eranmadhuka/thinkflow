@@ -5,44 +5,65 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  const checkAuth = async () => {
+  const [loading, setLoading] = useState(false); // Start with false
+  const fetchUser = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/user/profile`,
-        {
-          withCredentials: true,
-        }
+      const checkResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL}/user/check`,
+        { withCredentials: true }
       );
-      if (response.data) {
-        console.log("Auth check successful:", response.data);
-        setUser(response.data);
+      if (checkResponse.data.authenticated) {
+        const profileResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL}/user/profile`,
+          { withCredentials: true }
+        );
+        setUser(profileResponse.data);
       } else {
-        console.log("Auth check returned no user data");
         setUser(null);
       }
     } catch (error) {
       console.error(
-        "Auth check failed:",
+        "Error checking auth:",
         error.response?.data || error.message
       );
       setUser(null);
     } finally {
       setLoading(false);
-      setAuthChecked(true);
     }
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  // const fetchUser = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `${import.meta.env.VITE_API_URL}/user/profile`,
+  //       { withCredentials: true }
+  //     );
+  //     setUser(response.data);
+  //   } catch (error) {
+  //     if (error.response?.status === 401) {
+  //       setUser(null);
+  //     } else {
+  //       console.error(
+  //         "Unexpected error fetching user:",
+  //         error.response?.data || error.message
+  //       );
+  //       setUser(null);
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Remove useEffect here to avoid auto-fetching on mount
+  // useEffect(() => {
+  //   fetchUser();
+  // }, []);
 
   const login = (provider) => {
     const currentPath = window.location.pathname;
-    localStorage.setItem("redirectAfterLogin", currentPath || "/feed");
+    sessionStorage.setItem("redirectAfterLogin", currentPath || "/feed");
     window.location.href = `${
       import.meta.env.VITE_API_URL
     }/oauth2/authorization/${provider}`;
@@ -50,30 +71,36 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      const response = await axios.post(
+      setLoading(true);
+      await axios.post(
         `${import.meta.env.VITE_API_URL}/logout`,
         {},
         { withCredentials: true }
       );
-      console.log("Logout response:", response.data);
       setUser(null);
-      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);
       setUser(null);
-      window.location.href = "/login";
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, loading, authChecked, login, logout, checkAuth }}
+      value={{ user, setUser, loading, login, logout, fetchUser }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
 export { AuthContext };

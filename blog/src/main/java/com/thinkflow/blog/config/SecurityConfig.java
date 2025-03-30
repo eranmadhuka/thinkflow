@@ -44,8 +44,8 @@ public class SecurityConfig {
                         .successHandler((request, response, authentication) -> {
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : "http://localhost:5173/login?auth_success=true";
-//                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
+//                                    : "http://localhost:5173/login?auth_success=true";
+                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
                             System.out.println("OAuth Success - Session ID: " + request.getSession().getId());
                             response.sendRedirect(redirectUrl);
                         })
@@ -80,8 +80,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-//        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
+//        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -1,22 +1,31 @@
-import React, { useEffect } from "react";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = () => {
   const { user, loading, fetchUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (!user && !loading) {
-      fetchUser(); // Line ~22: This updates state in AuthProvider
+    const queryParams = new URLSearchParams(location.search);
+    const authSuccess = queryParams.get("auth_success") === "true";
+
+    if (authSuccess) {
+      // Allow initial redirect from /login?auth_success=true
+      return;
     }
-  }, [user, loading, fetchUser]);
 
-  useEffect(() => {
-    if (!loading && !user) {
+    if (!user && !loading && !hasFetched.current) {
+      hasFetched.current = true;
+      fetchUser();
+    }
+
+    if (!loading && !user && hasFetched.current) {
       navigate("/login");
     }
-  }, [loading, user, navigate]);
+  }, [user, loading, fetchUser, navigate, location.search]);
 
   if (loading) {
     return <div>Loading...</div>;

@@ -45,7 +45,7 @@ const Login = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
           <h1 className="font-abril text-3xl text-center text-gray-900 mb-6">
-            Time to Enter the Digital Realm!
+            Time to Enter the Digital Realm !
           </h1>
           <div className="space-y-4">
             <button

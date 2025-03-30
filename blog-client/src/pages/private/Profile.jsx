@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   Camera,
   Edit2,
@@ -19,7 +19,7 @@ import UserImg from "../../assets/images/user.png";
 
 const ProfilePage = () => {
   const { id } = useParams();
-  const { logout } = useContext(AuthContext);
+  const { logout } = useAuth();
   const [user, setUser] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [posts, setPosts] = useState([]);

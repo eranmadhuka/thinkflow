@@ -10,7 +10,7 @@ import {
   FaReply,
 } from "react-icons/fa";
 import { ThumbsUp, MessageCircle, Edit, Trash2 } from "lucide-react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import UserImg from "../../assets/images/user.png";
 
 const PostDetail = () => {
@@ -22,7 +22,7 @@ const PostDetail = () => {
   const [comments, setComments] = useState([]);
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [likesList, setLikesList] = useState([]);
   const [loadingLikes, setLoadingLikes] = useState(false);

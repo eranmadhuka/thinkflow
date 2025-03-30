@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { IoIosMenu, IoMdNotificationsOutline } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import Logo from "../../assets/images/logo.png";
 import { useNotifications } from "../../context/NotificationContext";
 import UserImg from "../../assets/images/user.png";
@@ -14,7 +14,7 @@ const Header = ({ onMenuToggle }) => {
   const [notificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
   const [imageLoading, setImageLoading] = useState(true);
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

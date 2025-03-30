@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import PostCard from "../../components/posts/PostCard";
 import Loading from "../../components/ui/Loading";
 
@@ -10,7 +10,7 @@ const Feed = () => {
   const [followingPosts, setFollowingPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedPosts, setSavedPosts] = useState([]);
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -164,9 +164,9 @@ const Feed = () => {
     }
   };
 
-  // if (loading) {
-  //   return <Loading />;
-  // }
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="w-full">

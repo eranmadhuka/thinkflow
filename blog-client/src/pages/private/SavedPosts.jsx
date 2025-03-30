@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import PostCard from "../../components/posts/PostCard";
 
 const SavedPosts = () => {
   const [savedPosts, setSavedPosts] = useState([]);
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSavedPostsDetails = async () => {

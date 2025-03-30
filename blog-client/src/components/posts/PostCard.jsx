@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import {
   ThumbsUp,
@@ -16,7 +16,7 @@ import UserImg from "../../assets/images/user.png";
 import Swal from "sweetalert2";
 
 const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [likes, setLikes] = useState(post.likeCount || 0);
   const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
   const [commentCount, setCommentCount] = useState(0);

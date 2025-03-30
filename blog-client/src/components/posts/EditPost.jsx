@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
+import {} from "../../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import MediaUpload from "./MediaUpload";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -8,7 +8,7 @@ import { storage } from "../../firebase/firebase";
 import Swal from "sweetalert2";
 
 const EditPost = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const { postId } = useParams();
   const navigate = useNavigate();
 

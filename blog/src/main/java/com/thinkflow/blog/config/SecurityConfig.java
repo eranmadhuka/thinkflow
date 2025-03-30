@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // ❗ Only disable if necessary
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionFixation().migrateSession() // Protect against session fixation
@@ -44,9 +44,10 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
                             request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
-                            String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
-                                    ? request.getSession().getAttribute("redirectAfterLogin").toString()
-                                    : "https://thinkflow-one.vercel.app/feed";
+                            String redirectUrl = (String) request.getSession().getAttribute("redirectAfterLogin");
+                            if (redirectUrl == null) {
+                                redirectUrl = "https://thinkflow-flax.vercel.app/feed";
+                            }
                             System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
                             response.sendRedirect(redirectUrl);
                         })
@@ -81,28 +82,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://thinkflow-one.vercel.app")); // Dev origin
-        // For production, uncomment and adjust:
-        // configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
+        configuration.setAllowedOrigins(List.of("https://thinkflow-flax.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
+        configuration.setExposedHeaders(List.of("Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    // Optional: Customize session cookie (uncomment for production or cross-origin dev issues)
-    /*
-    @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> cookieConfig() {
-        return factory -> factory.addContextCustomizers(context -> {
-            context.getSessionCookieConfig().setSameSite("None"); // Required for cross-origin in production
-            context.getSessionCookieConfig().setSecure(true); // Required with SameSite=None
-            context.getSessionCookieConfig().setHttpOnly(true); // Security best practice
-        });
-    }
-    */
 }

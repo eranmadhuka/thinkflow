@@ -28,30 +28,12 @@ export const router = createBrowserRouter([
   {
     element: <PublicRoute />,
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/register",
-        element: <Register />,
-      },
-      {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/privacy",
-        element: <PrivacyPolicy />,
-      },
-      {
-        path: "/terms",
-        element: <TermsOfService />,
-      },
+      { path: "/", element: <Home /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      { path: "/about", element: <About /> },
+      { path: "/privacy", element: <PrivacyPolicy /> },
+      { path: "/terms", element: <TermsOfService /> },
     ],
   },
   {
@@ -60,72 +42,22 @@ export const router = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          {
-            path: "/feed",
-            element: <Feed />,
-          },
-          {
-            path: "/saved-posts",
-            element: <SavedPosts />,
-          },
-          {
-            path: "/friends",
-            element: <FriendsList />,
-          },
-          {
-            path: "/peoples",
-            element: <PeopleList />,
-          },
-          {
-            path: "/notifications",
-            element: <Notifications />,
-          },
-          {
-            path: "/profile",
-            element: <Profile />,
-          },
-          {
-            path: "/profile/:id",
-            element: <Profile />,
-          },
-          {
-            path: "/update-profile",
-            element: <UpdateProfile />,
-          },
-          {
-            path: "/posts/add",
-            element: <AddBlogPost />,
-          },
-          {
-            path: "/posts/:postId",
-            element: <PostDetail />,
-          },
-          {
-            path: "/posts/:postId/edit",
-            element: <EditPost />,
-          },
+          { path: "/feed", element: <Feed /> },
+          { path: "/saved-posts", element: <SavedPosts /> },
+          { path: "/friends", element: <FriendsList /> },
+          { path: "/peoples", element: <PeopleList /> },
+          { path: "/notifications", element: <Notifications /> },
+          { path: "/profile", element: <Profile /> },
+          { path: "/profile/:id", element: <Profile /> },
+          { path: "/update-profile", element: <UpdateProfile /> },
+          { path: "/posts/add", element: <AddBlogPost /> },
+          { path: "/posts/:postId", element: <PostDetail /> },
+          { path: "/posts/:postId/edit", element: <EditPost /> },
         ],
       },
       {
         element: <CommonLayout />,
-        children: [
-          // {
-          //   path: "/update-profile",
-          //   element: <UpdateProfile />,
-          // },
-          // {
-          //   path: "/posts/add",
-          //   element: <AddBlogPost />,
-          // },
-          // {
-          //   path: "/posts/:postId",
-          //   element: <PostDetail />,
-          // },
-          // {
-          //   path: "/posts/:postId/edit",
-          //   element: <EditPost />,
-          // },
-        ],
+        children: [],
       },
     ],
   },

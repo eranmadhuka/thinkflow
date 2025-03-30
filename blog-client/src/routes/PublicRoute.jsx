@@ -1,3 +1,7 @@
+import React, { useEffect } from "react";
+import { Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 const PublicRoute = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -22,3 +26,5 @@ const PublicRoute = () => {
 
   return user ? null : <Outlet />;
 };
+
+export default PublicRoute; // Changed to default export

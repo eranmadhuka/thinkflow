@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Login = () => {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOAuthLogin = (provider) => {

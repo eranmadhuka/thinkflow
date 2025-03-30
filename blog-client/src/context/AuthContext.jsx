@@ -14,12 +14,19 @@ export const AuthProvider = ({ children }) => {
         "Fetching user from:",
         `${import.meta.env.VITE_API_URL}/user/profile`
       );
+
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/user/profile`,
         { withCredentials: true }
       );
-      console.log("User data:", response.data);
-      setUser(response.data);
+
+      if (response.data) {
+        console.log("User data received:", response.data);
+        setUser(response.data); // Ensure this line is correctly updating state
+      } else {
+        console.log("No user data received, setting user to null");
+        setUser(null);
+      }
     } catch (error) {
       console.error(
         "Error fetching user:",
@@ -58,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, loading, login, logout, fetchUser }}
+      value={{ user, setUser, loading, setLoading, login, logout, fetchUser }}
     >
       {children}
     </AuthContext.Provider>

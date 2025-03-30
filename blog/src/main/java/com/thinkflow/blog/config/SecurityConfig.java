@@ -32,7 +32,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Ensure session is created
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation().migrateSession() // Protect against session fixation
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/error", "/ws/**").permitAll()
@@ -42,12 +43,11 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
+                            request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
                             String redirectUrl = request.getSession().getAttribute("redirectAfterLogin") != null
                                     ? request.getSession().getAttribute("redirectAfterLogin").toString()
-//                                    : "http://localhost:5173/login?auth_success=true";
-//                                    : "https://thinkflow-three.vercel.app/login?auth_success=true";
-                                    : "https://thinkflow-three.vercel.app/feed";
-                            System.out.println("OAuth Success - Session ID: " + request.getSession().getId());
+                                    : "http://localhost:5173/feed";
+                            System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
                             response.sendRedirect(redirectUrl);
                         })
                         .failureUrl("/login?error=true")
@@ -81,8 +81,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Dev origin
+        // For production, uncomment and adjust:
+        // configuration.setAllowedOrigins(List.of("https://thinkflow-three.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -92,4 +93,16 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    // Optional: Customize session cookie (uncomment for production or cross-origin dev issues)
+    /*
+    @Bean
+    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> cookieConfig() {
+        return factory -> factory.addContextCustomizers(context -> {
+            context.getSessionCookieConfig().setSameSite("None"); // Required for cross-origin in production
+            context.getSessionCookieConfig().setSecure(true); // Required with SameSite=None
+            context.getSessionCookieConfig().setHttpOnly(true); // Security best practice
+        });
+    }
+    */
 }

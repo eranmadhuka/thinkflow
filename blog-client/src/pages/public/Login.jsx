@@ -18,7 +18,7 @@ const Login = () => {
 
     if (authSuccess && !user && !loading) {
       console.log("Auth success detected, fetching user...");
-      fetchUser(); // Fetch user data after successful login
+      fetchUser();
     }
 
     if (!loading && user) {

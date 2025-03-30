@@ -5,26 +5,19 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // Start with false
+  const [loading, setLoading] = useState(false);
+
   const fetchUser = async () => {
     try {
       setLoading(true);
-      const checkResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL}/user/check`,
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/user/profile`, // Use /user/profile, not /user/check
         { withCredentials: true }
       );
-      if (checkResponse.data.authenticated) {
-        const profileResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/user/profile`,
-          { withCredentials: true }
-        );
-        setUser(profileResponse.data);
-      } else {
-        setUser(null);
-      }
+      setUser(response.data);
     } catch (error) {
       console.error(
-        "Error checking auth:",
+        "Error fetching user:",
         error.response?.data || error.message
       );
       setUser(null);
@@ -32,34 +25,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  // const fetchUser = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.get(
-  //       `${import.meta.env.VITE_API_URL}/user/profile`,
-  //       { withCredentials: true }
-  //     );
-  //     setUser(response.data);
-  //   } catch (error) {
-  //     if (error.response?.status === 401) {
-  //       setUser(null);
-  //     } else {
-  //       console.error(
-  //         "Unexpected error fetching user:",
-  //         error.response?.data || error.message
-  //       );
-  //       setUser(null);
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Remove useEffect here to avoid auto-fetching on mount
-  // useEffect(() => {
-  //   fetchUser();
-  // }, []);
 
   const login = (provider) => {
     const currentPath = window.location.pathname;

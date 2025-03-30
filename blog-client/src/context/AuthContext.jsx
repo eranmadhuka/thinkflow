@@ -1,19 +1,17 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch user data
   const fetchUser = async () => {
     try {
+      console.log("Fetching user data...");
       setLoading(true);
-      console.log(
-        "Fetching user from:",
-        `${import.meta.env.VITE_API_URL}/user/profile`
-      );
 
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/user/profile`,
@@ -21,10 +19,9 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (response.data) {
-        console.log("User data received:", response.data);
-        setUser(response.data); // Ensure this line is correctly updating state
+        console.log("User authenticated:", response.data);
+        setUser(response.data);
       } else {
-        console.log("No user data received, setting user to null");
         setUser(null);
       }
     } catch (error) {
@@ -38,9 +35,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Runs only once when the app starts
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
   const login = (provider) => {
-    const currentPath = window.location.pathname;
-    sessionStorage.setItem("redirectAfterLogin", currentPath || "/feed");
+    sessionStorage.setItem(
+      "redirectAfterLogin",
+      window.location.pathname || "/feed"
+    );
     window.location.href = `${
       import.meta.env.VITE_API_URL
     }/oauth2/authorization/${provider}`;
@@ -57,7 +61,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);
-      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -65,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, loading, setLoading, login, logout, fetchUser }}
+      value={{ user, setUser, loading, login, logout, fetchUser }}
     >
       {children}
     </AuthContext.Provider>
@@ -74,10 +77,8 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
-
-export { AuthContext };

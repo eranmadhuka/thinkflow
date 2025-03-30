@@ -1,59 +1,30 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
 
 const PrivateRoute = () => {
-  const { user, setUser, loading, setLoading } = useAuth();
+  const { user, loading, fetchUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const hasFetched = useRef(false);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (user || loading) return; // Prevent unnecessary calls
-
-      console.log("Checking authentication...");
-
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/user/profile`,
-          { withCredentials: true, timeout: 5000 }
-        );
-
-        if (response.data) {
-          console.log("Authenticated user:", response.data);
-          setUser(response.data);
-
-          if (location.pathname === "/login") {
-            navigate("/feed", { replace: true });
-          }
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-
-        setUser(null);
-        if (location.pathname !== "/login") {
-          navigate("/login", {
-            replace: true,
-            state: { from: location.pathname },
-          });
-        }
-      } finally {
-        setLoading(false);
+    if (!user && !loading) {
+      fetchUser().then(() => {
         setInitialCheckComplete(true);
-      }
-    };
-
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      checkAuth();
+      });
+    } else {
+      setInitialCheckComplete(true);
     }
-  }, [user, loading, setUser, navigate, location]);
+  }, [user, loading, fetchUser]);
 
-  // Show loading state only during initial check
+  useEffect(() => {
+    if (initialCheckComplete && !user) {
+      console.log("User not authenticated, redirecting to login...");
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+    }
+  }, [initialCheckComplete, user, navigate, location]);
+
   if (!initialCheckComplete) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -62,7 +33,6 @@ const PrivateRoute = () => {
     );
   }
 
-  // Only render protected content if we have a user
   return user ? <Outlet /> : null;
 };
 

@@ -1,14 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      const redirectPath =
+        sessionStorage.getItem("redirectAfterLogin") || "/feed";
+      navigate(redirectPath, { replace: true });
+      sessionStorage.removeItem("redirectAfterLogin");
+    }
+  }, [user, navigate]);
 
   const handleOAuthLogin = (provider) => {
     setIsLoading(true);

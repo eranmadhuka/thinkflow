@@ -30,7 +30,7 @@ const Home = () => {
                 transform hover:scale-105 active:scale-95 
                 shadow-lg inline-block"
               >
-                Jump In Now!
+                Jump In Now !
               </Link>
             </div>
           </div>

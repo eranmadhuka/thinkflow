@@ -2,7 +2,16 @@ import React from "react";
 import { useNotifications } from "../../context/NotificationContext";
 
 const Notifications = () => {
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, loading } =
+    useNotifications();
+
+  if (loading) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-0 text-center mt-12">
+        <p className="text-lg text-gray-600">Loading notifications...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-0">
@@ -31,14 +40,20 @@ const Notifications = () => {
         <ul className="space-y-4">
           {notifications.map((notif, index) => (
             <li
-              key={index}
+              key={notif.id}
               className={`p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
                 notif.read
                   ? "bg-gray-100 text-gray-600"
-                  : "bg-white text-gray-800"
+                  : "bg-white text-gray-800 font-semibold"
               } transition-colors duration-200`}
             >
-              <span className="text-sm sm:text-base">{notif.message}</span>
+              <div className="flex flex-col">
+                <span className="text-sm sm:text-base">{notif.message}</span>
+                <span className="text-xs text-gray-500 mt-1">
+                  {new Date(notif.createdAt).toLocaleString()} -{" "}
+                  {notif.read ? "Read" : "Unread"}
+                </span>
+              </div>
               {!notif.read && (
                 <button
                   onClick={() => markAsRead(index)}
@@ -52,7 +67,7 @@ const Notifications = () => {
         </ul>
       ) : (
         <div className="text-center text-gray-500 mt-12">
-          <p className="text-lg sm:text-xl">No new notifications</p>
+          <p className="text-lg sm:text-xl">No notifications yet</p>
           <p className="text-sm mt-2">You're all caught up!</p>
         </div>
       )}

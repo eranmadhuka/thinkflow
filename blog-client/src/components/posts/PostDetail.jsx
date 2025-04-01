@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -53,7 +53,7 @@ const PostDetail = () => {
           `${import.meta.env.VITE_API_URL}/posts/${postId}/like-count`,
           { withCredentials: true }
         );
-        setLikes(likesResponse.data || 0); // Fallback to 0 if undefined
+        setLikes(likesResponse.data || 0);
 
         if (user) {
           const userLikeResponse = await axios.get(
@@ -64,7 +64,7 @@ const PostDetail = () => {
         }
 
         const commentsResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`,
+          `${import.meta.env.VITE_API_URL}/comments/${postId}/all`, // Updated endpoint
           { withCredentials: true }
         );
         const fetchedComments = Array.isArray(commentsResponse.data)
@@ -95,16 +95,14 @@ const PostDetail = () => {
       fetchedComments.map(async (comment) => {
         try {
           const likeCountResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL}/posts/comments/${
-              comment.id
-            }/like-count`,
+            `${import.meta.env.VITE_API_URL}/comments/${comment.id}/like-count`,
             { withCredentials: true }
           );
           likesObj[comment.id] = likeCountResponse.data || 0;
 
           if (user) {
             const hasLikedResponse = await axios.get(
-              `${import.meta.env.VITE_API_URL}/posts/comments/${
+              `${import.meta.env.VITE_API_URL}/comments/${
                 comment.id
               }/has-liked`,
               { withCredentials: true }
@@ -115,9 +113,7 @@ const PostDetail = () => {
           setReplyText((prev) => ({ ...prev, [comment.id]: "" }));
 
           const repliesResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL}/posts/comments/${
-              comment.id
-            }/replies`,
+            `${import.meta.env.VITE_API_URL}/comments/${comment.id}/replies`,
             { withCredentials: true }
           );
           repliesObj[comment.id] = Array.isArray(repliesResponse.data)
@@ -155,12 +151,10 @@ const PostDetail = () => {
   };
 
   const handleShowLikes = async () => {
-    console.log("handleShowLikes called, likes:", likes); // Debug
-    if (likes >= 0) {
-      // Changed from > 0 to >= 0 to show modal even if no likes
+    if (likes > 0) {
+      // Only fetch if there are likes
       await fetchLikesList();
       setShowLikesModal(true);
-      console.log("Modal should show, showLikesModal:", true); // Debug
     }
   };
 
@@ -178,6 +172,7 @@ const PostDetail = () => {
       setLikes(hasLiked ? likes - 1 : likes + 1);
     } catch (error) {
       console.error("Error liking post:", error);
+      alert("Failed to like post. Please try again.");
     }
   };
 
@@ -186,7 +181,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/posts/${post.id}/comment`,
+        `${import.meta.env.VITE_API_URL}/comments/${post.id}`, // Updated endpoint
         { content: commentText },
         { withCredentials: true }
       );
@@ -207,22 +202,24 @@ const PostDetail = () => {
   };
 
   const handleCommentLike = async (commentId) => {
-    if (!user) return;
+    if (!user) return alert("You must be logged in to like comments.");
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}/like`,
+        `${import.meta.env.VITE_API_URL}/comments/${commentId}/like`, // Updated endpoint
         {},
         { withCredentials: true }
       );
 
       setCommentLikes((prev) => ({
         ...prev,
-        [commentId]: response.data.likeCount,
+        [commentId]: hasLikedComment[commentId]
+          ? prev[commentId] - 1
+          : prev[commentId] + 1,
       }));
       setHasLikedComment((prev) => ({
         ...prev,
-        [commentId]: response.data.liked,
+        [commentId]: !prev[commentId],
       }));
     } catch (error) {
       console.error("Failed to like comment:", error);
@@ -242,7 +239,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}/reply`,
+        `${import.meta.env.VITE_API_URL}/comments/${commentId}/reply`, // Updated endpoint
         { content: replyText[commentId] },
         { withCredentials: true }
       );
@@ -274,10 +271,8 @@ const PostDetail = () => {
 
     try {
       await axios.delete(
-        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}`,
-        {
-          withCredentials: true,
-        }
+        `${import.meta.env.VITE_API_URL}/comments/${commentId}`, // Updated endpoint
+        { withCredentials: true }
       );
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== commentId)
@@ -299,7 +294,7 @@ const PostDetail = () => {
 
     try {
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/posts/comments/${commentId}`,
+        `${import.meta.env.VITE_API_URL}/comments/${commentId}`, // Updated endpoint
         { content: editCommentText },
         { withCredentials: true }
       );
@@ -315,6 +310,7 @@ const PostDetail = () => {
       alert("Failed to update comment. Please try again.");
     }
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -334,7 +330,7 @@ const PostDetail = () => {
   }
 
   return (
-    <div className="min-h-screen  sm:px-6 lg:px-8">
+    <div className="min-h-screen sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Main Content */}
         <main className="bg-white rounded-2xl shadow-lg overflow-hidden">

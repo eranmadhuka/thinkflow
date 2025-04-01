@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import axios from "axios";
 
-const AuthContext = createContext(); // No need to export this
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -14,17 +14,19 @@ export const AuthProvider = ({ children }) => {
         `${import.meta.env.VITE_API_URL}/user/profile`,
         { withCredentials: true }
       );
-      setUser(response.data || null);
+      setUser(response.data); // Set user state after successful fetch
+      return response.data; // Return data for promise handling
     } catch (error) {
       console.error("Error fetching user:", error);
       setUser(null);
+      throw error; // Allow caller to handle failure
     } finally {
       setLoading(false);
     }
   };
 
   const login = (provider) => {
-    sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+    sessionStorage.setItem("redirectAfterLogin", "/feed");
     window.location.href = `${
       import.meta.env.VITE_API_URL
     }/oauth2/authorization/${provider}`;
@@ -39,9 +41,9 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
       setUser(null);
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
-      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -56,5 +58,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Use this hook instead of importing `AuthContext` directly
 export const useAuth = () => useContext(AuthContext);

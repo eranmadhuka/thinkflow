@@ -10,22 +10,20 @@ const PrivateRoute = () => {
 
   useEffect(() => {
     if (!user && !loading) {
-      fetchUser().then(() => {
-        setInitialCheckComplete(true);
-      });
+      fetchUser()
+        .then(() => {
+          setInitialCheckComplete(true);
+        })
+        .catch(() => {
+          setInitialCheckComplete(true);
+          navigate("/login", { state: { from: location.pathname } });
+        });
     } else {
       setInitialCheckComplete(true);
     }
-  }, [user, loading, fetchUser]);
+  }, [user, loading, fetchUser, navigate, location]);
 
-  useEffect(() => {
-    if (initialCheckComplete && !user) {
-      console.log("User not authenticated, redirecting to login...");
-      navigate("/login", { replace: true, state: { from: location.pathname } });
-    }
-  }, [initialCheckComplete, user, navigate, location]);
-
-  if (!initialCheckComplete) {
+  if (loading || !initialCheckComplete) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -33,7 +31,7 @@ const PrivateRoute = () => {
     );
   }
 
-  return user ? <Outlet /> : null;
+  return user ? <Outlet /> : null; // Render Outlet if user exists
 };
 
 export default PrivateRoute;

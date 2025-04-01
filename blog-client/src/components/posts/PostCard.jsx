@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
@@ -47,7 +47,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
           `${import.meta.env.VITE_API_URL}/posts/${post.id}/like-count`,
           { withCredentials: true }
         );
-        setLikes(likesResponse.data);
+        setLikes(likesResponse.data || 0); // Fallback to 0 if undefined
 
         if (user) {
           const userLikeResponse = await axios.get(
@@ -58,10 +58,14 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
         }
 
         const commentsResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/posts/${post.id}/comments`,
+          `${import.meta.env.VITE_API_URL}/comments/${post.id}/all`, // Updated endpoint
           { withCredentials: true }
         );
-        setCommentCount(commentsResponse.data.length);
+        setCommentCount(
+          Array.isArray(commentsResponse.data)
+            ? commentsResponse.data.length
+            : 0
+        );
       } catch (error) {
         console.error("Error fetching post details:", error);
       }
@@ -82,6 +86,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
       setLikes(hasLiked ? likes - 1 : likes + 1);
     } catch (error) {
       console.error("Error liking post:", error);
+      alert("Failed to like post. Please try again.");
     }
   };
 
@@ -106,6 +111,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
       }
     } catch (error) {
       console.error("Failed to save/unsave post:", error);
+      alert("Failed to save/unsave post. Please try again.");
     }
   };
 
@@ -141,7 +147,7 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
           title: "Error!",
           text: "Failed to delete your post. Please try again.",
           icon: "error",
-          confirmButtonColor: "#4f46e5", // Indigo-600
+          confirmButtonColor: "#4f46e5",
         });
       }
     }
@@ -156,10 +162,22 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
         {},
         { withCredentials: true }
       );
-      alert(`Unfollowed ${post.user.name}`);
+      Swal.fire({
+        title: "Unfollowed!",
+        text: `You have unfollowed ${post.user.name}.`,
+        icon: "success",
+        confirmButtonColor: "#4f46e5",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error("Failed to unfollow user:", error);
-      alert("Failed to unfollow user. Please try again.");
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to unfollow user. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#4f46e5",
+      });
     }
   };
 
@@ -224,13 +242,13 @@ const PostCard = ({ post, posts, setPosts, savedPosts, setSavedPosts }) => {
                         <Bookmark size={16} className="mr-2" />
                         {isSaved ? "Unsave Post" : "Save Post"}
                       </button>
-                      {/* <button
+                      <button
                         onClick={handleUnfollowUser}
                         className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         role="menuitem"
                       >
                         <UserMinus size={16} className="mr-2" /> Unfollow User
-                      </button> */}
+                      </button>
                     </>
                   )}
                 </div>

@@ -31,7 +31,7 @@ const PrivateRoute = () => {
     );
   }
 
-  return user ? <Outlet /> : null; // Render Outlet if user exists
+  return user ? <Outlet /> : null;
 };
 
 export default PrivateRoute;

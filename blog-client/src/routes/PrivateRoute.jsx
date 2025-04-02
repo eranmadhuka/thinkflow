@@ -9,19 +9,22 @@ const PrivateRoute = () => {
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
   useEffect(() => {
-    if (!user && !loading) {
-      fetchUser()
-        .then(() => {
+    const checkAuth = async () => {
+      if (!user && !loading && !initialCheckComplete) {
+        try {
+          await fetchUser(); // Fetch user if not already loaded
           setInitialCheckComplete(true);
-        })
-        .catch(() => {
+        } catch (error) {
           setInitialCheckComplete(true);
-          navigate("/login", { state: { from: location.pathname } });
-        });
-    } else {
-      setInitialCheckComplete(true);
-    }
-  }, [user, loading, fetchUser, navigate, location]);
+          navigate("/login", { state: { from: location.pathname } }); // Redirect to login if fetch fails
+        }
+      } else {
+        setInitialCheckComplete(true); // Skip fetch if user or loading is already set
+      }
+    };
+
+    checkAuth();
+  }, [user, loading, fetchUser, navigate, location, initialCheckComplete]);
 
   if (loading || !initialCheckComplete) {
     return (
@@ -31,7 +34,7 @@ const PrivateRoute = () => {
     );
   }
 
-  return user ? <Outlet /> : null; // Render Outlet if user exists
+  return user ? <Outlet /> : null;
 };
 
 export default PrivateRoute;

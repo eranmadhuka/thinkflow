@@ -9,6 +9,8 @@ import Home from "../pages/public/Home";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import PrivacyPolicy from "../pages/public/PrivacyPolicy";
+import TermsOfService from "../pages/public/TermsOfService";
+import About from "../pages/public/About";
 
 // Private components
 import Feed from "../pages/private/Feed";
@@ -21,8 +23,6 @@ import PeopleList from "../pages/private/PeopleList";
 import EditPost from "../components/posts/EditPost";
 import FriendsList from "../pages/private/FriendsList";
 import Notifications from "../pages/private/Notifications";
-import TermsOfService from "../pages/public/TermsOfService";
-import About from "../pages/public/About";
 
 export const router = createBrowserRouter([
   {

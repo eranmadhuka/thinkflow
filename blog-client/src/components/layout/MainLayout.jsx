@@ -9,9 +9,9 @@ const MainLayout = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setSidebarOpen(true); // Desktop: Sidebar always visible
+        setSidebarOpen(true);
       } else {
-        setSidebarOpen(false); // Mobile: Sidebar hidden by default
+        setSidebarOpen(false);
       }
     };
 

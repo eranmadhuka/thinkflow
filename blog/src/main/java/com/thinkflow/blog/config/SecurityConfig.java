@@ -33,21 +33,20 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .sessionFixation().migrateSession() // Protect against session fixation
+                        .sessionFixation().migrateSession()
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error", "/ws/**").permitAll()
+                        .requestMatchers("/login", "/error", "/ws/**", "/oauth2/authorization/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers("/user/profile", "/logout").authenticated()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // Fixed syntax here
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
-                            request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
+                            request.getSession().setAttribute("user", authentication.getPrincipal());
                             String redirectUrl = (String) request.getSession().getAttribute("redirectAfterLogin");
-                            if (redirectUrl == null) {
+                            if (redirectUrl == null || redirectUrl.isEmpty()) {
                                 redirectUrl = "https://thinkflow-flax.vercel.app/feed";
-
                             }
                             System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
                             response.sendRedirect(redirectUrl);

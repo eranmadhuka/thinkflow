@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS) // Changed to ALWAYS for iOS
+                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
                         .sessionFixation().migrateSession()
                 )
                 .authorizeHttpRequests(auth -> auth
@@ -56,9 +56,9 @@ public class SecurityConfig {
                             if (redirectUrl == null) {
                                 redirectUrl = "https://thinkflow-flax.vercel.app/feed";
                             }
-                            // Add cache control headers for iOS
                             response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-                            response.sendRedirect(redirectUrl);
+                            response.setHeader("Location", redirectUrl);
+                            response.setStatus(HttpServletResponse.SC_FOUND);
                         })
                         .failureHandler((request, response, exception) -> {
                             response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -72,7 +72,6 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID")
                         .addLogoutHandler(logoutHandler())
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            // iOS-specific headers
                             response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                             response.setHeader("Pragma", "no-cache");
                             response.setHeader("Expires", "0");
@@ -99,22 +98,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow both Vercel and local development origins
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://thinkflow-flax.vercel.app"
-        ));
+        configuration.setAllowedOrigins(Arrays.asList("https://thinkflow-flax.vercel.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        // iOS-specific exposed headers
         configuration.setExposedHeaders(Arrays.asList(
                 "Authorization",
                 "Access-Control-Allow-Origin",
                 "Access-Control-Allow-Credentials",
-                "Set-Cookie",  // Critical for iOS
+                "Set-Cookie",
                 "X-Requested-With"
         ));
-        // Safari cache settings
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

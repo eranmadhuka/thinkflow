@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Start as true for initial fetch
 
   const fetchUser = async () => {
     try {
@@ -30,13 +30,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = (provider) => {
     try {
-      // No need for sessionStorage since backend handles redirect
       window.location.href = `${
         import.meta.env.VITE_API_URL
       }/oauth2/authorization/${provider}`;
     } catch (error) {
       console.error("Login redirection failed:", error);
-      setLoading(false); // Reset loading if redirect fails
+      setLoading(false);
     }
   };
 
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);
-      setUser(null); // Ensure user is cleared even on failure
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -61,8 +60,7 @@ export const AuthProvider = ({ children }) => {
   // Fetch user on initial mount
   useEffect(() => {
     fetchUser().catch(() => {
-      // Silently handle initial fetch failure (e.g., unauthenticated)
-      // Routes will handle redirects
+      // Silently handle failure; PrivateRoute will redirect if needed
     });
   }, []);
 

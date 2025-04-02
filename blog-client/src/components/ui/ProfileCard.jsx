@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -13,29 +13,7 @@ const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
   const [isFollowing, setIsFollowing] = useState(
     loggedInUser?.following?.includes(user.id)
   );
-  const [postCount, setPostCount] = useState(user.posts?.length || 0);
   const navigate = useNavigate();
-
-  // Fetch posts when component mounts or user changes
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const postsResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/posts/user/${user.id}`,
-          { withCredentials: true }
-        );
-        setPostCount(postsResponse.data.length);
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        setPostCount(0); // Fallback to 0 if fetch fails
-      }
-    };
-
-    // Only fetch if posts aren't already provided or are outdated
-    if (!user.posts || user.posts.length === 0) {
-      fetchPosts();
-    }
-  }, [user.id]);
 
   const handleFollowToggle = async (e) => {
     e.stopPropagation();
@@ -86,7 +64,7 @@ const ProfileCard = ({ user, loggedInUser, onFollowToggle }) => {
         <div className="flex justify-between text-center mb-4">
           <div>
             <span className="block text-sm font-semibold text-gray-800">
-              {postCount}
+              {user.posts?.length || 0}
             </span>
             <span className="text-xs text-gray-500">Posts</span>
           </div>

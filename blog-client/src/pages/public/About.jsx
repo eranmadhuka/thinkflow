@@ -1,6 +1,6 @@
 import React from "react";
-import Header from "../../components/common/Header";
-import Footer from "../../components/common/Footer";
+import Header from "../../components/common/Header"; // Assuming you have this
+import Footer from "../../components/common/Footer"; // Assuming you have this
 
 const About = () => {
   return (
@@ -67,7 +67,7 @@ const About = () => {
               <p className="text-gray-700">
                 Portfolio:{" "}
                 <a
-                  href="https://eranmadhuka.netlify.app"
+                  href="https://my-portfolio-five-ecru-46.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-black hover:underline"

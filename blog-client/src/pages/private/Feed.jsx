@@ -88,7 +88,7 @@ const Feed = () => {
           { withCredentials: true }
         );
         const commentsResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/comments/${post.id}/all`,
+          `${import.meta.env.VITE_API_URL}/posts/${post.id}/comments`,
           { withCredentials: true }
         );
         let hasLiked = false;

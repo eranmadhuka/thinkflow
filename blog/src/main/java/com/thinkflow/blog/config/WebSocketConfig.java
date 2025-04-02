@@ -22,6 +22,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOrigins("https://thinkflow-flax.vercel.app")
-                .withSockJS(); // Enable SockJS fallback
+                .withSockJS();
     }
 }

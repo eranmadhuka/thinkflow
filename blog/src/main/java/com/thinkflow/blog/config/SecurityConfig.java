@@ -16,7 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -33,37 +32,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                        .sessionFixation().migrateSession()
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation().migrateSession() // Protect against session fixation
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/login",
-                                "/error",
-                                "/ws/**",
-                                "/api/auth/user",
-                                "/oauth2/**"
-                        ).permitAll()
+                        .requestMatchers("/login", "/error", "/ws/**").permitAll()
                         .requestMatchers("/user/profile", "/logout").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(authService))
                         .successHandler((request, response, authentication) -> {
-                            request.getSession().setAttribute("user", authentication.getPrincipal());
+                            request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
                             String redirectUrl = (String) request.getSession().getAttribute("redirectAfterLogin");
                             if (redirectUrl == null) {
                                 redirectUrl = "https://thinkflow-flax.vercel.app/feed";
                             }
-                            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-                            response.setHeader("Location", redirectUrl);
-                            response.setStatus(HttpServletResponse.SC_FOUND);
+                            System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
+                            response.sendRedirect(redirectUrl);
                         })
-                        .failureHandler((request, response, exception) -> {
-                            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-                            response.sendRedirect("https://thinkflow-flax.vercel.app/login?error=true");
-                        })
+                        .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -72,9 +60,6 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID")
                         .addLogoutHandler(logoutHandler())
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-                            response.setHeader("Pragma", "no-cache");
-                            response.setHeader("Expires", "0");
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.getWriter().write("Logout successful");
                         })
@@ -82,7 +67,6 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
                 );
@@ -98,18 +82,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://thinkflow-flax.vercel.app"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(List.of("https://thinkflow-flax.vercel.app"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "Access-Control-Allow-Origin",
-                "Access-Control-Allow-Credentials",
-                "Set-Cookie",
-                "X-Requested-With"
-        ));
-        configuration.setMaxAge(3600L);
+        configuration.setExposedHeaders(List.of("Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -46,7 +46,7 @@ public class SecurityConfig {
                             request.getSession().setAttribute("user", authentication.getPrincipal()); // Store user session
                             String redirectUrl = (String) request.getSession().getAttribute("redirectAfterLogin");
                             if (redirectUrl == null) {
-                                redirectUrl = "https://thinkflow-flax.vercel.app/feed";
+                                redirectUrl = "http://localhost:5173/feed";
                             }
                             System.out.println("OAuth Success - Redirecting to: " + redirectUrl);
                             response.sendRedirect(redirectUrl);
@@ -82,7 +82,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://thinkflow-flax.vercel.app"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
-const AuthContext = createContext(); // No need to export this
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Fetch user data on mount or after login
   const fetchUser = async () => {
     try {
       setLoading(true);
@@ -16,20 +17,29 @@ export const AuthProvider = ({ children }) => {
       );
       setUser(response.data || null);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error(
+        "Error fetching user:",
+        error.response?.data || error.message
+      );
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle OAuth2 login with a specific provider (e.g., "google")
   const login = (provider) => {
-    sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
-    window.location.href = `${
-      import.meta.env.VITE_API_URL
-    }/oauth2/authorization/${provider}`;
+    try {
+      sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      window.location.href = `${
+        import.meta.env.VITE_API_URL
+      }/oauth2/authorization/${provider}`;
+    } catch (error) {
+      console.error("Login redirection failed:", error);
+    }
   };
 
+  // Handle logout
   const logout = async () => {
     try {
       setLoading(true);
@@ -39,13 +49,19 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
       setUser(null);
+      window.location.href = "/"; // Redirect to home after logout
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout failed:", error.response?.data || error.message);
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
+
+  // Check user status on mount
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -56,5 +72,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Use this hook instead of importing `AuthContext` directly
 export const useAuth = () => useContext(AuthContext);

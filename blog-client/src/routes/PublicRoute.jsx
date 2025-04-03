@@ -27,10 +27,6 @@ const PublicRoute = () => {
     }
   }, [user, loading, fetchUser, navigate, location]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return user ? null : <Outlet />;
 };
 

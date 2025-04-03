@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Start as true for initial fetch
+  const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
